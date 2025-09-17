@@ -1,7 +1,13 @@
 import pytest
-from gic_cbs.main import some_function  # Replace with actual function or class to test
+from unittest import mock
+from src.main import main  # Updated import for src directory
 
-def test_some_function():
-    assert some_function() == expected_value  # Replace with actual test case and expected value
+def test_startup_prompt(capsys):
+    with mock.patch("builtins.input", side_effect=KeyboardInterrupt):
+        try:
+            main()
+        except KeyboardInterrupt:
+            pass  # Allow test to exit gracefully
 
-# Add more test cases as needed
+    captured = capsys.readouterr()
+    assert "Please define movie title and seating map in [Title] [Row] [SeatsPerRow] format:" in captured.out
