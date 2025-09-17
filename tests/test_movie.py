@@ -1,4 +1,4 @@
-from src.movie import create_movie
+from src.movie import create_movie, movie_available_seats
 
 def test_create_movie_basic():
     user_input = "Inception 8 10"
@@ -29,3 +29,8 @@ def test_create_movie_json_structure():
     # Check bookings is a list and empty
     assert isinstance(movie["bookings"], list)
     assert len(movie["bookings"]) == 0
+
+
+def test_movie_available_seats_no_bookings():
+    movie = create_movie("Inception 8 10")
+    assert movie_available_seats(movie) == 80

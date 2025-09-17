@@ -19,3 +19,10 @@ def create_movie(user_input):
         "seats_per_row": seats_per_row,
         "bookings": []  # Each booking: {"ID": ..., "status": ..., "seats": ...}
     }
+
+def movie_available_seats(movie):
+    """
+    Returns the number of available seats for the given movie JSON.
+    For now, simply returns row * seats_per_row (no bookings considered).
+    """
+    return movie["row"] * movie["seats_per_row"]
