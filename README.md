@@ -26,6 +26,10 @@ This project uses `pytest` for testing. To run the tests, execute the following 
 pytest
 ```
 
+## Observability
+
+As this is a very basic application which doesn't even have API, no advanced telemetry except for logging has been put in place. The code will automatically create a logs directory under the project root and one log file per day will be created. 
+
 ## Documentation
 The documentation for the project is generated using Sphinx. You can build the documentation by navigating to the `docs` directory and running:
 
