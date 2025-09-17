@@ -12,7 +12,7 @@ log_path = os.path.join(LOG_DIR, log_filename)
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(message)s',
-    handlers=[logging.FileHandler(log_path), logging.StreamHandler()]
+    handlers=[logging.FileHandler(log_path)]  # Only file handler, no StreamHandler
 )
 
 logger = logging.getLogger('gic-cbs')
