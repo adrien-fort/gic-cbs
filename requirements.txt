@@ -1,4 +1,4 @@
-Flask==2.0.3
+## ttyd is used for web-based CLI access; see deployment docs for details
 pytest==6.2.4
 sphinx==4.2.0
 pytest-cov==2.12.1
