@@ -26,7 +26,7 @@ def test_main_invalid_then_valid_input(capsys):
     assert captured.out.count("Invalid input. Please try again.") == 2
     assert "Welcome to the GIC CBS application!" in captured.out
     assert "Welcome to GIC Cinemas" in captured.out
-    assert "Thank you for using GIC Cinemas system.Bye!" in captured.out
+    assert "Thank you for using GIC Cinemas system. Bye!" in captured.out
 
 def test_main_valid_first_try(capsys):
     from src import main as main_module
@@ -37,7 +37,7 @@ def test_main_valid_first_try(capsys):
     assert "Invalid input. Please try again." not in captured.out
     assert "Welcome to the GIC CBS application!" in captured.out
     assert "Welcome to GIC Cinemas" in captured.out
-    assert "Thank you for using GIC Cinemas system.Bye!" in captured.out
+    assert "Thank you for using GIC Cinemas system. Bye!" in captured.out
 
 def test_main_menu_exit(capsys):
     from src import main as main_module
@@ -48,7 +48,7 @@ def test_main_menu_exit(capsys):
     with mock.patch("builtins.input", side_effect=user_inputs):
         main_module.main()
     captured = capsys.readouterr()
-    assert "Thank you for using GIC Cinemas system.Bye!" in captured.out
+    assert "Thank you for using GIC Cinemas system. Bye!" in captured.out
     assert "Welcome to GIC Cinemas" in captured.out
     assert "seats available" in captured.out
 
@@ -63,7 +63,7 @@ def test_main_menu_invalid_then_exit(capsys):
         main_module.main()
     captured = capsys.readouterr()
     assert "Invalid selection. Please try again." in captured.out
-    assert "Thank you for using GIC Cinemas system.Bye!" in captured.out
+    assert "Thank you for using GIC Cinemas system. Bye!" in captured.out
 
 def test_main_menu_book_and_check(capsys):
     from src import main as main_module
@@ -78,4 +78,4 @@ def test_main_menu_book_and_check(capsys):
     captured = capsys.readouterr()
     assert "Booking tickets - feature not yet implemented." in captured.out
     assert "Checking bookings - feature not yet implemented." in captured.out
-    assert "Thank you for using GIC Cinemas system.Bye!" in captured.out
+    assert "Thank you for using GIC Cinemas system. Bye!" in captured.out
