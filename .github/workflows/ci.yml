@@ -48,3 +48,4 @@ jobs:
           args: >
             -Dsonar.projectKey=adrien-fort_gic-cbs
             -Dsonar.organization=adrien-fort
+            -Dsonar.python.coverage.reportPaths=coverage.xml
