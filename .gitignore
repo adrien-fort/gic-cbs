@@ -14,7 +14,9 @@ env/
 .vscode/
 
 # Test and coverage
+# Coverage
 .coverage
+coverage.xml
 .pytest_cache/
 
 # Log files
