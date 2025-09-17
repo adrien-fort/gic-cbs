@@ -17,6 +17,9 @@ env/
 .coverage
 .pytest_cache/
 
+# Log files
+*.log
+
 # Distribution / packaging
 build/
 dist/
