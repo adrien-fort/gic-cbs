@@ -45,7 +45,7 @@ def test_log_file_creation_and_content():
     file_handler.close()
     os.remove(test_log_file)
     assert not os.path.exists(test_log_file), 'Log file was not deleted after test.'
-    
+
 def test_log_warning_file_content():
     import logging
     log_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'logs'))
