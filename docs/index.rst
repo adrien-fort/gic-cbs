@@ -1,4 +1,4 @@
-Project Title
+Welcome to GIC Cinema Booking System's documentation!
 =============
 
 gic-cbs
@@ -8,9 +8,12 @@ gic-cbs
    :maxdepth: 2
    :caption: Contents:
 
-   usage
-   api
-   contributing
+   Assumptions
+   Setup
+   Usage
+   Tests
+   Future Improvements
+   Contributing
 
 License
 =======
