@@ -1,3 +1,5 @@
+[tool.pytest.ini_options]
+addopts = "--cov=src --cov-report=xml"
 [tool.poetry]
 name = "gic-cbs"
 version = "0.1.0"
