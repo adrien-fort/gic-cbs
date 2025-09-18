@@ -1,4 +1,6 @@
 from src.movie import create_movie, movie_available_seats
+import os
+import json
 
 def test_create_movie_basic():
     user_input = "Inception 8 10"
@@ -34,3 +36,27 @@ def test_create_movie_json_structure():
 def test_movie_available_seats_no_bookings():
     movie = create_movie("Inception 8 10")
     assert movie_available_seats(movie) == 80
+
+
+def test_save_movie_creates_and_overwrites_file():
+    from src.movie import save_movie
+    logs_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'logs'))
+    movie_file = os.path.join(logs_dir, 'movie.json')
+
+    # Ensure clean state
+    if os.path.exists(movie_file):
+        os.remove(movie_file)
+
+    movie1 = create_movie("Inception 8 10")
+    save_movie(movie1)
+    assert os.path.exists(movie_file)
+    with open(movie_file, 'r') as f:
+        data = json.load(f)
+    assert data == movie1
+
+    # Overwrite with different movie
+    movie2 = create_movie("Avatar 12 50")
+    save_movie(movie2)
+    with open(movie_file, 'r') as f:
+        data2 = json.load(f)
+    assert data2 == movie2

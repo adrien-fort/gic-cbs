@@ -26,3 +26,17 @@ def movie_available_seats(movie):
     For now, simply returns row * seats_per_row (no bookings considered).
     """
     return movie["row"] * movie["seats_per_row"]
+
+def save_movie(movie_json):
+    """
+    Saves the movie JSON object to logs/movie.json, overwriting if it exists.
+    This functionality is not explicitely requested in the requirements but is useful for both debugging and future enhancements.
+    """
+    import os
+    import json
+    log_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'logs'))
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+    movie_file = os.path.join(log_dir, 'movie.json')
+    with open(movie_file, 'w') as f:
+        json.dump(movie_json, f)

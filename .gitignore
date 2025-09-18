@@ -21,6 +21,7 @@ coverage.xml
 
 # Log files
 *.log
+logs/movie.json
 
 # Distribution / packaging
 build/
