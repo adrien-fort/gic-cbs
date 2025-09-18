@@ -1,6 +1,32 @@
 from src.movie import create_movie, movie_available_seats
 import os
 import json
+from src.movie import movie_display
+
+def test_movie_display_basic():
+    movie = create_movie("Inception 8 10")
+    # Insert a reserved booking for A4, A5, A6, A7
+    movie["bookings"].append({
+        "ID": "GIC0001",
+        "status": "R",
+        "seats": ["A4", "A5", "A6", "A7"]
+    })
+    output = movie_display(movie)
+    expected = (
+        "    S C R E E N\n"
+        "    ------------------------------\n"
+        "H . . . . . . . . . .\n"
+        "G . . . . . . . . . .\n"
+        "F . . . . . . . . . .\n"
+        "E . . . . . . . . . .\n"
+        "D . . . . . . . . . .\n"
+        "C . . . . . . . . . .\n"
+        "B . . . . . . . . . .\n"
+        "A . . . o o o o . . .\n"
+        "  1 2 3 4 5 6 7 8 9 10"
+    )
+    assert output.strip() == expected.strip()
+
 
 def test_create_movie_basic():
     user_input = "Inception 8 10"
