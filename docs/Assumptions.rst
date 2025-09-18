@@ -4,6 +4,7 @@ Assumptions
 The code is currently designed around several assumptions:
     | 1)The movie name can be more than one word and even have a number (e.g. Die Hard 2)
     | 2)0 is not an acceptable number for # of rows or # of seats per row, this would not make sense in the real world
+    | 3)While the current code wouldn't allow for a booking ID to be skipped the code is currently build to create a new ID which is +1 from the max existing ID 
 
 Snippet
 --------
@@ -29,3 +30,14 @@ Snippet
             return False
         return True
 
+2) This is simply handled the booking module via the below simple look up loop:
+
+.. code-block:: python
+
+    for booking in bookings:
+            bid = booking.get("ID", "")
+            if bid.startswith("GIC") and bid[3:].isdigit():
+                num = int(bid[3:])
+                if num > max_id:
+                    max_id = num
+        next_id = max_id + 1

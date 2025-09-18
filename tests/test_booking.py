@@ -37,3 +37,40 @@ def test_get_booking_id_with_gap():
     ]
     # Should return GIC0004 (next after max)
     assert get_booking_id(movie) == "GIC0004"
+
+def test_confirm_reservation_changes_status():
+    from src.booking import confirm_reservation
+    from src.movie import create_movie
+    # Create a movie and add a booking with status 'R'
+    movie = create_movie("Inception 8 10")
+    booking_id = "GIC0001"
+    movie["bookings"] = [
+        {"ID": booking_id, "status": "R", "seats": ["A1", "A2"]}
+    ]
+    updated_movie = confirm_reservation(movie, booking_id)
+    assert updated_movie["bookings"][0]["status"] == "B"
+
+def test_confirm_reservation_does_not_change_other_bookings():
+    from src.booking import confirm_reservation
+    from src.movie import create_movie
+    # Create a movie and add two bookings
+    movie = create_movie("Inception 8 10")
+    movie["bookings"] = [
+        {"ID": "GIC0001", "status": "R", "seats": ["A1"]},
+        {"ID": "GIC0002", "status": "R", "seats": ["A2"]}
+    ]
+    updated_movie = confirm_reservation(movie, "GIC0002")
+    assert updated_movie["bookings"][0]["status"] == "R"
+    assert updated_movie["bookings"][1]["status"] == "B"
+
+def test_confirm_reservation_nonexistent_id():
+    from src.booking import confirm_reservation
+    from src.movie import create_movie
+    # Create a movie with one booking
+    movie = create_movie("Inception 8 10")
+    movie["bookings"] = [
+        {"ID": "GIC0001", "status": "R", "seats": ["A1"]}
+    ]
+    updated_movie = confirm_reservation(movie, "GIC9999")
+    # No change expected
+    assert updated_movie["bookings"][0]["status"] == "R"
