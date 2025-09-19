@@ -1,4 +1,4 @@
-from src import logger, movie
+from src import logger, movie, booking
 from src.validation import movie_validation, is_positive_integer, ticket_num_validation
 
 def prompt_movie_creation():
@@ -21,7 +21,7 @@ def main_menu_loop(movie_data):
         print("[1] Book tickets for "+ movie_data["title"] + " (" + str(movie.movie_available_seats(movie_data)) + " seats available)")
         print("[2] Check bookings")
         print("[3] Exit")
-        choice = input("Please enter your selection:")
+        choice = input("Please enter your selection:\n")
         if choice == "1":
             logger.log_info("User selected Booking tickets.")
             booking_tickets_loop(movie_data)
@@ -38,7 +38,7 @@ def main_menu_loop(movie_data):
 
 def booking_tickets_loop(movie_data):
     while True:
-        ticket_input = input("Enter number of tickets to book, or enter blank to go back to main menu:")
+        ticket_input = input("\nEnter number of tickets to book, or enter blank to go back to main menu:\n")
         logger.log_info(f"Booking prompt received input: '{ticket_input}'")
         if ticket_input.strip() == "":
             logger.log_info("User returned to main menu from booking prompt.")
@@ -52,12 +52,12 @@ def booking_tickets_loop(movie_data):
             if int(ticket_input) > available:
                 logger.log_warning(f"Requested tickets ({ticket_input}) exceed available seats ({available}).")
                 if available == 1:
-                    print(f"Sorry, there is only 1 seat available.")
+                    print("Sorry, there is only 1 seat available.")
                 else:
                     print(f"Sorry, there are only {available} seats available.")
             elif ticket_num_validation(ticket_input, movie_data):
                 logger.log_info(f"User requested to book {ticket_input} tickets. Validation passed.")
-                print(f"Booking {ticket_input} tickets - feature not yet implemented.")
+                movie_data = booking.book_ticket(movie_data, int(ticket_input))
                 break
             else:
                 logger.log_warning(f"Ticket input '{ticket_input}' failed ticket_num_validation.")
