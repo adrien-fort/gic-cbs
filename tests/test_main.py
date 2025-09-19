@@ -149,3 +149,48 @@ def test_main_menu_loop_exit(monkeypatch):
     monkeypatch.setattr("builtins.input", lambda _: "3")
     # Should exit cleanly
     main_module.main_menu_loop(movie_data)
+
+def test_booking_tickets_loop_exit_immediately(monkeypatch, capsys):
+    from src import main as main_module
+    movie_data = {"title": "Inception", "row": 2, "seats_per_row": 2, "bookings": []}
+    monkeypatch.setattr("builtins.input", lambda _: "")
+    main_module.booking_tickets_loop(movie_data)
+    captured = capsys.readouterr()
+    # Should produce no output when exiting immediately
+    assert captured.out == ""
+
+def test_booking_tickets_loop_invalid_input(monkeypatch, capsys):
+    from src import main as main_module
+    movie_data = {"title": "Inception", "row": 2, "seats_per_row": 2, "bookings": []}
+    inputs = iter(["notanumber", ""])  # invalid, then exit
+    monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+    main_module.booking_tickets_loop(movie_data)
+    captured = capsys.readouterr()
+    assert "Invalid input. Please enter a valid number of tickets or blank to go back." in captured.out
+
+def test_booking_tickets_loop_too_many_plural(monkeypatch, capsys):
+    from src import main as main_module
+    movie_data = {"title": "Inception", "row": 2, "seats_per_row": 2, "bookings": []}  # 4 seats
+    inputs = iter(["5", ""])  # too many, then exit
+    monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+    main_module.booking_tickets_loop(movie_data)
+    captured = capsys.readouterr()
+    assert "Sorry, there are only 4 seats available." in captured.out
+
+def test_booking_tickets_loop_too_many_singular(monkeypatch, capsys):
+    from src import main as main_module
+    movie_data = {"title": "Inception", "row": 1, "seats_per_row": 1, "bookings": []}  # 1 seat
+    inputs = iter(["2", ""])  # too many, then exit
+    monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+    main_module.booking_tickets_loop(movie_data)
+    captured = capsys.readouterr()
+    assert "Sorry, there is only 1 seat available." in captured.out
+
+def test_booking_tickets_loop_valid(monkeypatch, capsys):
+    from src import main as main_module
+    movie_data = {"title": "Inception", "row": 2, "seats_per_row": 2, "bookings": []}  # 4 seats
+    inputs = iter(["2"])  # valid booking
+    monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+    main_module.booking_tickets_loop(movie_data)
+    captured = capsys.readouterr()
+    assert "Booking 2 tickets - feature not yet implemented." in captured.out

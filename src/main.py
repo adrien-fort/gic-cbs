@@ -24,31 +24,7 @@ def main_menu_loop(movie_data):
         choice = input("Please enter your selection:")
         if choice == "1":
             logger.log_info("User selected Booking tickets.")
-            while True:
-                ticket_input = input("Enter number of tickets to book, or enter blank to go back to main menu:")
-                logger.log_info(f"Booking prompt received input: '{ticket_input}'")
-                if ticket_input.strip() == "":
-                    logger.log_info("User returned to main menu from booking prompt.")
-                    break
-                elif not is_positive_integer(ticket_input):
-                    logger.log_warning(f"Invalid ticket input (not positive integer): '{ticket_input}'")
-                    print("Invalid input. Please enter a valid number of tickets or blank to go back.")
-                else:
-                    available = movie.movie_available_seats(movie_data)
-                    logger.log_info(f"User requested {ticket_input} tickets; {available} seats available.")
-                    if int(ticket_input) > available:
-                        logger.log_warning(f"Requested tickets ({ticket_input}) exceed available seats ({available}).")
-                        if available == 1:
-                            print(f"Sorry, there is only 1 seat available.")
-                        else:
-                            print(f"Sorry, there are only {available} seats available.")
-                    elif ticket_num_validation(ticket_input, movie_data):
-                        logger.log_info(f"User requested to book {ticket_input} tickets. Validation passed.")
-                        print(f"Booking {ticket_input} tickets - feature not yet implemented.")
-                        break
-                    else:
-                        logger.log_warning(f"Ticket input '{ticket_input}' failed ticket_num_validation.")
-                        print("Invalid input. Please enter a valid number of tickets or blank to go back.")
+            booking_tickets_loop(movie_data)
         elif choice == "2":
             logger.log_info("Checking bookings - feature not yet implemented.")
             print("Checking bookings - feature not yet implemented.")
@@ -59,6 +35,34 @@ def main_menu_loop(movie_data):
         else:
             logger.log_warning(f"Invalid menu selection: {choice}. Prompting again.")
             print("Invalid selection. Please try again.")
+
+def booking_tickets_loop(movie_data):
+    while True:
+        ticket_input = input("Enter number of tickets to book, or enter blank to go back to main menu:")
+        logger.log_info(f"Booking prompt received input: '{ticket_input}'")
+        if ticket_input.strip() == "":
+            logger.log_info("User returned to main menu from booking prompt.")
+            break
+        elif not is_positive_integer(ticket_input):
+            logger.log_warning(f"Invalid ticket input (not positive integer): '{ticket_input}'")
+            print("Invalid input. Please enter a valid number of tickets or blank to go back.")
+        else:
+            available = movie.movie_available_seats(movie_data)
+            logger.log_info(f"User requested {ticket_input} tickets; {available} seats available.")
+            if int(ticket_input) > available:
+                logger.log_warning(f"Requested tickets ({ticket_input}) exceed available seats ({available}).")
+                if available == 1:
+                    print(f"Sorry, there is only 1 seat available.")
+                else:
+                    print(f"Sorry, there are only {available} seats available.")
+            elif ticket_num_validation(ticket_input, movie_data):
+                logger.log_info(f"User requested to book {ticket_input} tickets. Validation passed.")
+                print(f"Booking {ticket_input} tickets - feature not yet implemented.")
+                break
+            else:
+                logger.log_warning(f"Ticket input '{ticket_input}' failed ticket_num_validation.")
+                print("Invalid input. Please enter a valid number of tickets or blank to go back.")
+
 
 def main():
     from src import logger
