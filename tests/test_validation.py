@@ -39,3 +39,19 @@ def test_is_positive_integer():
     assert validation.is_positive_integer(-3) is False
     assert validation.is_positive_integer("abc") is False
     assert validation.is_positive_integer(None) is False
+
+def test_ticket_num_validation():
+    from src.validation import ticket_num_validation
+    from src.movie import create_movie
+    # Empty cinema: Inception 8 10 (80 seats)
+    movie = create_movie("Inception 8 10")
+    assert ticket_num_validation("4", movie) is True
+    assert ticket_num_validation("81", movie) is False
+    # 6 seats already booked
+    movie_with_booked = create_movie("Inception 8 10")
+    movie_with_booked["bookings"].append({
+        "ID": "GIC0001",
+        "status": "B",
+        "seats": ["A1", "A2", "A3", "A4", "A5", "A6"]
+    })
+    assert ticket_num_validation("78", movie_with_booked) is False

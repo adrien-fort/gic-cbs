@@ -42,3 +42,19 @@ def movie_validation(user_input):
     if not (1 <= seats_int <= 50):
         return False
     return True
+
+def ticket_num_validation(ticket_input, movie_json):
+    """
+    Returns True if ticket_input is a positive integer and less than or equal to available seats in the movie.
+    """
+    from src.movie import movie_available_seats
+    try:
+        num = int(ticket_input)
+        if num <= 0:
+            return False
+    except (ValueError, TypeError):
+        return False
+    available = movie_available_seats(movie_json)
+    # Subtract already booked seats
+    booked = sum(len(b.get("seats", [])) for b in movie_json.get("bookings", []))
+    return num <= (available - booked)

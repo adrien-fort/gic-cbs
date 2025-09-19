@@ -14,7 +14,7 @@ def test_movie_display_basic():
     output = movie_display(movie)
     expected = (
         "    S C R E E N\n"
-        "    ------------------------------\n"
+        "------------------------------\n"
         "H . . . . . . . . . .\n"
         "G . . . . . . . . . .\n"
         "F . . . . . . . . . .\n"

@@ -1,29 +1,3 @@
-def movie_display(movie):
-    """
-    Returns a string representing the seating chart for the movie, showing reserved seats as 'o'.
-    """
-    rows = movie["row"]
-    seats_per_row = movie["seats_per_row"]
-    seat_map = {chr(ord('A') + i): ['.'] * seats_per_row for i in range(rows)}
-    # Mark reserved seats as 'o'
-    for booking in movie.get("bookings", []):
-        if booking.get("status") == "R":
-            for seat in booking.get("seats", []):
-                row = seat[0]
-                num = int(seat[1:]) - 1
-                seat_map[row][num] = 'o'
-    # Build display
-    lines = []
-    lines.append("    S C R E E N")
-    lines.append("    " + "-" * 30)
-    for i in range(rows-1, -1, -1):
-        row_letter = chr(ord('A') + i)
-        row_str = row_letter + ' ' + ' '.join(seat_map[row_letter])
-        lines.append(row_str)
-    # Footer with seat numbers
-    footer = '  ' + ' '.join(str(n+1) for n in range(seats_per_row))
-    lines.append(footer)
-    return '\n'.join(lines)
 """
 movie.py
 --------
@@ -66,3 +40,30 @@ def save_movie(movie_json):
     movie_file = os.path.join(log_dir, 'movie.json')
     with open(movie_file, 'w') as f:
         json.dump(movie_json, f)
+
+def movie_display(movie):
+    """
+    Returns a string representing the seating chart for the movie, showing reserved seats as 'o'.
+    """
+    rows = movie["row"]
+    seats_per_row = movie["seats_per_row"]
+    seat_map = {chr(ord('A') + i): ['.'] * seats_per_row for i in range(rows)}
+    # Mark reserved seats as 'o'
+    for booking in movie.get("bookings", []):
+        if booking.get("status") == "R":
+            for seat in booking.get("seats", []):
+                row = seat[0]
+                num = int(seat[1:]) - 1
+                seat_map[row][num] = 'o'
+    # Build display
+    lines = []
+    lines.append("    S C R E E N")
+    lines.append("-" * 30)
+    for i in range(rows-1, -1, -1):
+        row_letter = chr(ord('A') + i)
+        row_str = row_letter + ' ' + ' '.join(seat_map[row_letter])
+        lines.append(row_str)
+    # Footer with seat numbers
+    footer = '  ' + ' '.join(str(n+1) for n in range(seats_per_row))
+    lines.append(footer)
+    return '\n'.join(lines)
