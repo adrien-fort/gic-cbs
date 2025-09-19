@@ -70,12 +70,54 @@ def test_main_menu_book_and_check(capsys):
     user_inputs = [
         "Inception 8 10",  # valid movie input
         "1",               # book tickets
+        "2",               # number of tickets to book (valid)
+        "",                # return to menu from booking prompt
         "2",               # check bookings
         "3"                # exit
     ]
     with mock.patch("builtins.input", side_effect=user_inputs):
         main_module.main()
     captured = capsys.readouterr()
-    assert "Booking tickets - feature not yet implemented." in captured.out
-    assert "Checking bookings - feature not yet implemented." in captured.out
-    assert "Thank you for using GIC Cinemas system. Bye!" in captured.out
+    assert "Booking 2 tickets - feature not yet implemented." in captured.out
+
+def test_main_booking_too_many_tickets_plural(capsys):
+    from src import main as main_module
+    user_inputs = [
+        "Inception 2 2",  # 4 seats
+        "1",              # book tickets
+        "5",              # request more than available
+        "",               # return to menu
+        "3"               # exit
+    ]
+    with mock.patch("builtins.input", side_effect=user_inputs):
+        main_module.main()
+    captured = capsys.readouterr()
+    assert "Sorry, there are only 4 seats available." in captured.out
+
+def test_main_booking_too_many_tickets_singular(capsys):
+    from src import main as main_module
+    user_inputs = [
+        "Inception 1 1",  # 1 seat
+        "1",              # book tickets
+        "2",              # request more than available
+        "",               # return to menu
+        "3"               # exit
+    ]
+    with mock.patch("builtins.input", side_effect=user_inputs):
+        main_module.main()
+    captured = capsys.readouterr()
+    assert "Sorry, there is only 1 seat available." in captured.out
+
+def test_main_booking_invalid_input(capsys):
+    from src import main as main_module
+    user_inputs = [
+        "Inception 2 2",  # 4 seats
+        "1",              # book tickets
+        "notanumber",     # invalid input
+        "",               # return to menu
+        "3"               # exit
+    ]
+    with mock.patch("builtins.input", side_effect=user_inputs):
+        main_module.main()
+    captured = capsys.readouterr()
+    assert "Invalid input. Please enter a valid number of tickets or blank to go back." in captured.out
