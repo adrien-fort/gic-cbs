@@ -1,10 +1,7 @@
-from src import logger
-from src.validation import movie_validation
-from src import movie
+from src import logger, movie
+from src.validation import movie_validation, is_positive_integer, ticket_num_validation
 
-def main():
-    logger.log_info("GIC CBS application started.")
-    print("\nWelcome to the GIC CBS application!")
+def prompt_movie_creation():
     logger.log_info("Prompting user for movie title and seating map.")
     while True:
         user_input = input("Please define movie title and seating map in [Title] [Row] [SeatsPerRow] format:\n")
@@ -13,11 +10,12 @@ def main():
             logger.log_info(f"Valid movie and seating map input received: {user_input}")
             movie_data = movie.create_movie(user_input)
             logger.log_info(f"Movie created: {movie_data}")
-            break
+            return movie_data
         else:
             logger.log_warning(f"Invalid input for movie and seating map: {user_input}. Prompting again.")
             print("Invalid input. Please try again.")
-    
+
+def main_menu_loop(movie_data):
     while True:
         print("\nWelcome to GIC Cinemas")
         print("[1] Book tickets for "+ movie_data["title"] + " (" + str(movie.movie_available_seats(movie_data)) + " seats available)")
@@ -26,7 +24,6 @@ def main():
         choice = input("Please enter your selection:")
         if choice == "1":
             logger.log_info("User selected Booking tickets.")
-            from src.validation import is_positive_integer, ticket_num_validation
             while True:
                 ticket_input = input("Enter number of tickets to book, or enter blank to go back to main menu:")
                 logger.log_info(f"Booking prompt received input: '{ticket_input}'")
@@ -62,6 +59,16 @@ def main():
         else:
             logger.log_warning(f"Invalid menu selection: {choice}. Prompting again.")
             print("Invalid selection. Please try again.")
+
+def main():
+    from src import logger
+    logger.log_info("GIC CBS application started.")
+    print("\nWelcome to the GIC CBS application!")
+    movie_data = prompt_movie_creation()
+    main_menu_loop(movie_data)
+    print("Thank you for using GIC Cinemas system. Bye!")
+
+
 
 if __name__ == "__main__":
     main()

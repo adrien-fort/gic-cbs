@@ -121,3 +121,31 @@ def test_main_booking_invalid_input(capsys):
         main_module.main()
     captured = capsys.readouterr()
     assert "Invalid input. Please enter a valid number of tickets or blank to go back." in captured.out
+
+# Unit test for prompt_movie_creation (isolated)
+def test_prompt_movie_creation_valid(monkeypatch):
+    from src import main as main_module
+    # Simulate valid input on first try
+    monkeypatch.setattr("builtins.input", lambda _: "Inception 8 10")
+    movie_data = main_module.prompt_movie_creation()
+    assert movie_data["title"] == "Inception"
+    assert movie_data["row"] == 8
+    assert movie_data["seats_per_row"] == 10
+    assert isinstance(movie_data["bookings"], list)
+
+def test_prompt_movie_creation_invalid_then_valid(monkeypatch):
+    from src import main as main_module
+    inputs = iter(["badinput", "Inception 8 10"])
+    monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+    movie_data = main_module.prompt_movie_creation()
+    assert movie_data["title"] == "Inception"
+
+# Unit test for main_menu_loop (isolated)
+def test_main_menu_loop_exit(monkeypatch):
+    from src import main as main_module
+    # Create a dummy movie_data
+    movie_data = {"title": "Inception", "row": 8, "seats_per_row": 10, "bookings": []}
+    # Simulate user entering '3' to exit immediately
+    monkeypatch.setattr("builtins.input", lambda _: "3")
+    # Should exit cleanly
+    main_module.main_menu_loop(movie_data)
