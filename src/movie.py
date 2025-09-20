@@ -47,27 +47,56 @@ def save_movie(movie_json):
 
 def movie_display(movie):
     """
-    Returns a string representing the seating chart for the movie, showing reserved seats as 'o'.
+    Returns a string representing the seating chart for the movie. 
+    Showing reserved seats as 'o' and booked seats as '#'.
+    The spacing adjusts for double-digit seat numbers.
+    """
+    rows = movie["row"]
+    seats_per_row = movie["seats_per_row"]
+    seat_map = build_seat_display_map(movie)
+    # Build display
+    lines = []
+    lines.append("Selected seats:\n")
+    # Calculate width for centering
+    screen_text = "S C R E E N"
+    if seats_per_row > 10:
+        total_width = seats_per_row * 3 + 1
+    else:
+        total_width = seats_per_row * 2 + 2
+    screen_centered = screen_text.center(total_width)
+    lines.append(screen_centered)
+    lines.append("-" * total_width)
+    seat_sep = '  ' if seats_per_row > 10 else ' '
+    for i in range(rows-1, -1, -1):
+        row_letter = chr(ord('A') + i)
+        row_str = row_letter + ' ' + seat_sep.join(seat_map[row_letter])
+        lines.append(row_str)
+    # Footer with seat numbers
+    footer = '  '
+    for n in range(1, seats_per_row + 1):
+        if n < 10:
+            footer += str(n) + '  '
+        else:
+            footer += str(n) + ' '
+    lines.append(footer.rstrip())
+    return '\n'.join(lines)
+
+def build_seat_display_map(movie):
+    """
+    Returns a seat map for display, marking reserved seats as 'o' and booked seats as '#'.
     """
     rows = movie["row"]
     seats_per_row = movie["seats_per_row"]
     seat_map = {chr(ord('A') + i): ['.'] * seats_per_row for i in range(rows)}
-    # Mark reserved seats as 'o'
     for booking in movie.get("bookings", []):
         if booking.get("status") == "R":
             for seat in booking.get("seats", []):
                 row = seat[0]
                 num = int(seat[1:]) - 1
                 seat_map[row][num] = 'o'
-    # Build display
-    lines = []
-    lines.append("    S C R E E N")
-    lines.append("-" * 30)
-    for i in range(rows-1, -1, -1):
-        row_letter = chr(ord('A') + i)
-        row_str = row_letter + ' ' + ' '.join(seat_map[row_letter])
-        lines.append(row_str)
-    # Footer with seat numbers
-    footer = '  ' + ' '.join(str(n+1) for n in range(seats_per_row))
-    lines.append(footer)
-    return '\n'.join(lines)
+        if booking.get("status") == "B":
+            for seat in booking.get("seats", []):
+                row = seat[0]
+                num = int(seat[1:]) - 1
+                seat_map[row][num] = '#'
+    return seat_map

@@ -1,6 +1,6 @@
 import string
 import copy
-from src.movie import save_movie
+from src.movie import save_movie, movie_display
 
 def book_ticket(movie_json, num_tickets):
     """
@@ -8,7 +8,7 @@ def book_ticket(movie_json, num_tickets):
     Uses get_booking_id to generate the next booking ID and assigns seats.
     Returns the modified movie JSON.
     """
-    print(f"\nSuccessfully reserved {num_tickets} {movie_json['title']} tickets")
+    print(f"\nSuccessfully reserved {num_tickets} {movie_json['title']} tickets.")
     booking_id = get_booking_id(movie_json)
     booking = {
             "ID": booking_id,
@@ -24,9 +24,10 @@ def book_ticket(movie_json, num_tickets):
     booking["seats"] = assigned_seats
     
     movie_json["bookings"].append(booking)
+    save_movie(movie_json)  # Save the updated movie JSON
     while True:
         print(f"\nBooking ID: {booking_id}")
-        # here we will call the display function
+        print(movie_display(movie_json))
         seating_input = input("\nEnter blank to accept seat selection, or enter new seating position:\n")
         if seating_input.strip() == "":
             movie_json = confirm_reservation(movie_json, booking_id)

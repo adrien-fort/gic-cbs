@@ -1,4 +1,4 @@
-from src.movie import create_movie, movie_available_seats, movie_display
+from src.movie import create_movie, movie_available_seats, movie_display, build_seat_display_map
 import os
 import json
 
@@ -12,8 +12,10 @@ def test_movie_display_basic():
     })
     output = movie_display(movie)
     expected = (
-        "    S C R E E N\n"
-        "------------------------------\n"
+        "Selected seats:\n"
+        "\n"
+        "     S C R E E N      \n"
+        "----------------------\n"
         "H . . . . . . . . . .\n"
         "G . . . . . . . . . .\n"
         "F . . . . . . . . . .\n"
@@ -22,7 +24,71 @@ def test_movie_display_basic():
         "C . . . . . . . . . .\n"
         "B . . . . . . . . . .\n"
         "A . . . o o o o . . .\n"
-        "  1 2 3 4 5 6 7 8 9 10"
+        "  1  2  3  4  5  6  7  8  9  10"
+    )
+    assert output.strip() == expected.strip()
+
+
+def test_movie_display_booked():
+    movie = create_movie("Inception 2 4")
+    movie["bookings"].append({
+        "ID": "GIC0001",
+        "status": "B",
+        "seats": ["A1", "B3"]
+    })
+    output = movie_display(movie)
+    expected = (
+        "Selected seats:\n"
+        "\n"
+        "S C R E E N\n"
+        "----------\n"
+        "B . . # .\n"
+        "A # . . .\n"
+        "  1  2  3  4"
+    )
+    assert output.strip() == expected.strip()
+
+
+def test_movie_display_mixed():
+    movie = create_movie("Inception 2 4")
+    movie["bookings"].append({
+        "ID": "GIC0001",
+        "status": "R",
+        "seats": ["A2"]
+    })
+    movie["bookings"].append({
+        "ID": "GIC0002",
+        "status": "B",
+        "seats": ["A1", "B3"]
+    })
+    output = movie_display(movie)
+    expected = (
+        "Selected seats:\n"
+        "\n"
+        "S C R E E N\n"
+        "----------\n"
+        "B . . # .\n"
+        "A # o . .\n"
+        "  1  2  3  4"
+    )
+    assert output.strip() == expected.strip()
+
+
+def test_movie_display_wide():
+    movie = create_movie("Inception 1 12")
+    movie["bookings"].append({
+        "ID": "GIC0001",
+        "status": "B",
+        "seats": ["A1", "A12"]
+    })
+    output = movie_display(movie)
+    expected = (
+        "Selected seats:\n"
+        "\n"
+        "             S C R E E N             \n"
+        "-------------------------------------\n"
+        "A #  .  .  .  .  .  .  .  .  .  .  #\n"
+        "  1  2  3  4  5  6  7  8  9  10 11 12"
     )
     assert output.strip() == expected.strip()
 
@@ -96,3 +162,57 @@ def test_save_movie_creates_and_overwrites_file():
     with open(movie_file, 'r') as f:
         data2 = json.load(f)
     assert data2 == movie2
+
+
+def test_build_seat_display_map_empty():
+    movie = create_movie("Inception 3 5")
+    seat_map = build_seat_display_map(movie)
+    assert seat_map == {
+        'A': ['.', '.', '.', '.', '.'],
+        'B': ['.', '.', '.', '.', '.'],
+        'C': ['.', '.', '.', '.', '.']
+    }
+
+def test_build_seat_display_map_reserved():
+    movie = create_movie("Inception 2 4")
+    movie["bookings"].append({
+        "ID": "GIC0001",
+        "status": "R",
+        "seats": ["A2", "B4"]
+    })
+    seat_map = build_seat_display_map(movie)
+    assert seat_map == {
+        'A': ['.', 'o', '.', '.'],
+        'B': ['.', '.', '.', 'o']
+    }
+
+def test_build_seat_display_map_booked():
+    movie = create_movie("Inception 2 4")
+    movie["bookings"].append({
+        "ID": "GIC0001",
+        "status": "B",
+        "seats": ["A1", "B3"]
+    })
+    seat_map = build_seat_display_map(movie)
+    assert seat_map == {
+        'A': ['#', '.', '.', '.'],
+        'B': ['.', '.', '#', '.']
+    }
+
+def test_build_seat_display_map_mixed():
+    movie = create_movie("Inception 2 4")
+    movie["bookings"].append({
+        "ID": "GIC0001",
+        "status": "R",
+        "seats": ["A2"]
+    })
+    movie["bookings"].append({
+        "ID": "GIC0002",
+        "status": "B",
+        "seats": ["A1", "B3"]
+    })
+    seat_map = build_seat_display_map(movie)
+    assert seat_map == {
+        'A': ['#', 'o', '.', '.'],
+        'B': ['.', '.', '#', '.']
+    }
