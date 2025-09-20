@@ -1,7 +1,6 @@
-from src.movie import create_movie, movie_available_seats
+from src.movie import create_movie, movie_available_seats, movie_display
 import os
 import json
-from src.movie import movie_display
 
 def test_movie_display_basic():
     movie = create_movie("Inception 8 10")
@@ -62,6 +61,17 @@ def test_create_movie_json_structure():
 def test_movie_available_seats_no_bookings():
     movie = create_movie("Inception 8 10")
     assert movie_available_seats(movie) == 80
+
+
+def test_movie_available_seats_with_bookings():
+    movie = create_movie("Inception 8 10")
+    # Book A6, A5, A7, A4
+    movie["bookings"].append({
+        "ID": "GIC0001",
+        "status": "B",
+        "seats": ["A6", "A5", "A7", "A4"]
+    })
+    assert movie_available_seats(movie) == 76
 
 
 def test_save_movie_creates_and_overwrites_file():

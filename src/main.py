@@ -10,6 +10,7 @@ def prompt_movie_creation():
             logger.log_info(f"Valid movie and seating map input received: {user_input}")
             movie_data = movie.create_movie(user_input)
             logger.log_info(f"Movie created: {movie_data}")
+            movie.save_movie(movie_data)  # Save the newly created movie
             return movie_data
         else:
             logger.log_warning(f"Invalid input for movie and seating map: {user_input}. Prompting again.")

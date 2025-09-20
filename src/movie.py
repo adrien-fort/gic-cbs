@@ -23,9 +23,13 @@ def create_movie(user_input):
 def movie_available_seats(movie):
     """
     Returns the number of available seats for the given movie JSON.
-    For now, simply returns row * seats_per_row (no bookings considered).
+    Subtracts the number of booked seats from the total.
     """
-    return movie["row"] * movie["seats_per_row"]
+    total = movie["row"] * movie["seats_per_row"]
+    booked = 0
+    for booking in movie.get("bookings", []):
+        booked += len(booking.get("seats", []))
+    return total - booked
 
 def save_movie(movie_json):
     """
