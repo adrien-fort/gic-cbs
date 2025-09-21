@@ -1,3 +1,4 @@
+from src.logger import log_info, log_warning, log_error
 from src.booking import get_booking_id, confirm_reservation, get_row_center, seat_sort_order, build_seat_map, get_booked_seats
 import string
 
@@ -10,34 +11,43 @@ def book_ticket_advanced(movie_json, num_tickets):
     Uses get_booking_id to generate the next booking ID.
     Returns the modified movie JSON.
     """
+    log_info(f"[ADVANCED] Starting booking for {num_tickets} tickets for movie '{movie_json['title']}'")
     print(f"\nSuccessfully reserved {num_tickets} {movie_json['title']} tickets")
     booking_id = get_booking_id(movie_json)
+    log_info(f"[ADVANCED] Generated booking ID: {booking_id}")
     booking = {
-            "ID": booking_id,
-            "status": "R", # set as Reserved by default, will be set to B once user confirms
-            "seats": []
-        }
+        "ID": booking_id,
+        "status": "R", # set as Reserved by default, will be set to B once user confirms
+        "seats": []
+    }
     # Ensure bookings is a list
     if "bookings" not in movie_json or not isinstance(movie_json["bookings"], list):
+        log_warning("[ADVANCED] 'bookings' key missing or not a list in movie_json. Initializing new list.")
         movie_json["bookings"] = []
     
     # Assign seats using default_seating (now returns seat list)
     assigned_seats = default_seating_advanced(movie_json, num_tickets)
     booking["seats"] = assigned_seats
+    log_info(f"[ADVANCED] Default seats assigned: {assigned_seats}")
     
     movie_json["bookings"].append(booking)
+    log_info(f"[ADVANCED] Booking object added to movie_json: {booking}")
     while True:
         print(f"\nBooking ID: {booking_id}")
         # here we will call the display function
         seating_input = input("\nEnter blank to accept seat selection, or enter new seating position:\n")
         if seating_input.strip() == "":
+            log_info(f"[ADVANCED] Booking {booking_id} confirmed by user.")
             movie_json = confirm_reservation(movie_json, booking_id)
+            log_info(f"[ADVANCED] Booking {booking_id} status set to 'B'.")
             break
         else:
+            log_warning(f"[ADVANCED] Seat selection modification not implemented. User input: '{seating_input.strip()}'")
             print("Seat selection modification not yet implemented. Please enter blank to accept.")
     return movie_json
 
 def block_center(block, seats_per_row):
+    log_info(f"[ADVANCED] Calculating block center for block: {block}")
     """
     Given a block of seat labels (e.g., ["A4", "A5", "A6"]) and seats_per_row, return the absolute distance
     from the block's center to the row center (lower is more central).
@@ -49,6 +59,7 @@ def block_center(block, seats_per_row):
     return abs(center - (sum(nums) / len(nums)))
 
 def find_contiguous_blocks(available):
+    log_info(f"[ADVANCED] Finding contiguous blocks in available seats: {available}")
     """
     Given a list of available seat labels in a row, return a list of all contiguous seat blocks.
     Each block is a list of seat labels.
@@ -67,6 +78,7 @@ def find_contiguous_blocks(available):
     return blocks
 
 def default_seating_advanced(movie_json, num_tickets):
+    log_info(f"[ADVANCED] Assigning advanced default seating for {num_tickets} tickets.")
     """
     Assign the best available contiguous seats for the given group size.
     - Fills from row A (back) to front row.

@@ -1,3 +1,4 @@
+from src.logger import log_info, log_warning, log_error
 """
 movie.py
 --------
@@ -5,6 +6,7 @@ This module contains functions related to movie creation and management.
 """
 
 def create_movie(user_input):
+    log_info(f"Creating movie with input: '{user_input}'")
     """
     Takes validated user input (string) and returns a JSON-serializable dict representing the movie theatre.
     The JSON output include an empty array for bookings that will be filled by other functions.
@@ -21,6 +23,7 @@ def create_movie(user_input):
     }
 
 def movie_available_seats(movie):
+    log_info(f"Calculating available seats for movie: {movie.get('title', 'Unknown')}")
     """
     Returns the number of available seats for the given movie JSON.
     Subtracts the number of booked seats from the total.
@@ -32,6 +35,7 @@ def movie_available_seats(movie):
     return total - booked
 
 def save_movie(movie_json):
+    log_info(f"Saving movie JSON for '{movie_json.get('title', 'Unknown')}' to logs/movie.json")
     """
     Saves the movie JSON object to logs/movie.json, overwriting if it exists.
     This functionality is not explicitely requested in the requirements but is useful for both debugging and future enhancements.
@@ -46,6 +50,7 @@ def save_movie(movie_json):
         json.dump(movie_json, f)
 
 def movie_display(movie):
+    log_info(f"Building display for movie: {movie.get('title', 'Unknown')}")
     """
     Returns a string representing the seating chart for the movie. 
     Showing reserved seats as 'o' and booked seats as '#'.
@@ -82,6 +87,7 @@ def movie_display(movie):
     return '\n'.join(lines)
 
 def build_seat_display_map(movie):
+    log_info(f"Building seat display map for movie: {movie.get('title', 'Unknown')}")
     """
     Returns a seat map for display, marking reserved seats as 'o' and booked seats as '#'.
     """

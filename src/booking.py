@@ -1,3 +1,4 @@
+from src.logger import log_info, log_warning, log_error
 import string
 import copy
 from src.movie import save_movie, movie_display
@@ -9,45 +10,57 @@ def book_ticket(movie_json, num_tickets):
     Uses get_booking_id to generate the next booking ID and assigns seats.
     Returns the modified movie JSON.
     """
+    log_info(f"Starting booking for {num_tickets} tickets for movie '{movie_json['title']}'")
     print(f"\nSuccessfully reserved {num_tickets} {movie_json['title']} tickets.")
     booking_id = get_booking_id(movie_json)
+    log_info(f"Generated booking ID: {booking_id}")
     booking = {
-            "ID": booking_id,
-            "status": "R", # set as Reserved by default, will be set to B once user confirms
-            "seats": []
-        }
+        "ID": booking_id,
+        "status": "R", # set as Reserved by default, will be set to B once user confirms
+        "seats": []
+    }
     # Ensure bookings is a list
     if "bookings" not in movie_json or not isinstance(movie_json["bookings"], list):
+        log_warning("'bookings' key missing or not a list in movie_json. Initializing new list.")
         movie_json["bookings"] = []
     
     # Assign seats using default_seating (now returns seat list)
     assigned_seats = default_seating(movie_json, num_tickets)
     booking["seats"] = assigned_seats
+    log_info(f"Default seats assigned: {assigned_seats}")
     
     movie_json["bookings"].append(booking)
+    log_info(f"Booking object added to movie_json: {booking}")
     save_movie(movie_json)  # Save the updated movie JSON
+    log_info("Initial booking saved to movie file.")
     while True:
         print(f"\nBooking ID: {booking_id}")
         print(movie_display(movie_json))
         seating_input = input("\nEnter blank to accept seat selection, or enter new seating position:\n> ")
         status = is_valid_seat(movie_json, seating_input)
         if status == "blank":
+            log_info(f"Booking {booking_id} confirmed by user.")
             movie_json = confirm_reservation(movie_json, booking_id)
             save_movie(movie_json)  # Save the updated movie JSON
+            log_info(f"Booking {booking_id} status set to 'B' and saved.")
             print(f"\nBooking ID: {booking_id} confirmed.\n")
             break
         elif status == "valid":
             assigned_seats = custom_seating(movie_json, num_tickets, seating_input.strip().upper())
+            log_info(f"Custom seating input '{seating_input.strip().upper()}' accepted. Seats assigned: {assigned_seats}")
             for b in movie_json["bookings"]:
                 if b["ID"] == booking_id:
                     b["seats"] = assigned_seats
                     break
             save_movie(movie_json)  # Save the updated movie JSON
+            log_info(f"Booking {booking_id} updated with custom seats and saved.")
         else:
+            log_warning(f"Invalid seat input '{seating_input.strip()}'; prompt user again.")
             print(f"Seat {seating_input.strip()} is not valid. Please try again or enter blank to accept.")
     return movie_json
 
 def get_booking_id(movie_json):
+    log_info("Calculating next booking ID.")
     """
     Returns the next booking ID in the format GIC####, scanning the bookings array for the highest number.
     """
@@ -63,6 +76,7 @@ def get_booking_id(movie_json):
     return f"GIC{next_id:04d}"
 
 def confirm_reservation(movie_json, booking_id):
+    log_info(f"Confirming reservation for booking ID: {booking_id}")
     """
     Sets the status of the booking with the given ID to 'B' (booked) instead of default 'R' (reserved).
     Modifies the movie_json in place.
@@ -73,6 +87,7 @@ def confirm_reservation(movie_json, booking_id):
     return movie_json
 
 def build_seat_map(movie_json):
+    log_info(f"Building seat map for movie: {movie_json.get('title', 'Unknown')}")
     """
     Build a dictionary mapping row letters to lists of seat labels for the movie.
     Example: {'A': ['A1', 'A2', ...], 'B': [...], ...}
@@ -86,6 +101,7 @@ def build_seat_map(movie_json):
     return seat_map
 
 def get_booked_seats(movie_json):
+    log_info("Getting all booked seats for movie.")
     """
     Return a set of all seat labels that are already booked (status 'B') in the movie.
     Reserved (status 'R') seats are not considered booked for exclusion.
@@ -155,6 +171,7 @@ def seat_sort_order(seats, seats_per_row, take=None):
     return result
 
 def default_seating(movie_json, num_tickets):
+    log_info(f"Assigning default seating for {num_tickets} tickets.")
     """
     Assign the best available  seats for the given group size.
     - Fills from row A (back) to front row.
@@ -204,6 +221,7 @@ def fill_prev_rows_by_centrality(row_idx, row_letters, seat_map, seats_per_row, 
     return filled
 
 def custom_seating(movie_json, num_tickets, seat_input):
+    log_info(f"Assigning custom seating for {num_tickets} tickets starting at {seat_input}.")
     """
     Assigns seats starting from the user-selected seat, filling to the right in the same row.
     If not enough seats are available to the right, overflow to the next row(s) by centrality.
