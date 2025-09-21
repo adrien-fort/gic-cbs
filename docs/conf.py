@@ -9,6 +9,12 @@ author = 'Your Name'
 # The full version, including alpha/beta/rc tags
 release = '0.1.0'
 
+
+# -- Path setup --------------------------------------------------------------
+import os
+import sys
+sys.path.insert(0, os.path.abspath('../src'))
+
 # -- General configuration ---------------------------------------------------
 
 extensions = [

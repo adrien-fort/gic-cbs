@@ -11,6 +11,7 @@ gic-cbs
    Assumptions
    Setup
    Usage
+   api_reference
    Tests
    Future Improvements
    Contributing

@@ -1,8 +1,13 @@
 from src.logger import log_info, log_warning, log_error
 import string
-import copy
 from src.movie import save_movie, movie_display
 from src.validation import is_valid_seat
+"""
+Booking.py
+--------
+This module contains functions related to movie booking the book_ticket function drives the flow.
+The two main approaches to seating are default_seating (best available) and custom_seating (user selected).
+"""
 
 def book_ticket(movie_json, num_tickets):
     """
@@ -187,6 +192,10 @@ def default_seating(movie_json, num_tickets):
     return ordered_seats[:num_tickets]
 
 def fill_right_in_row(row, start_num, seats_per_row, booked, assigned):
+    """
+    Fill seats to the right of the starting seat in the same row, skipping booked or already assigned seats.
+    Returns a list of available seat labels.
+    """
     filled = []
     for n in range(start_num, seats_per_row + 1):
         seat = f"{row}{n}"
@@ -195,6 +204,10 @@ def fill_right_in_row(row, start_num, seats_per_row, booked, assigned):
     return filled
 
 def fill_next_rows_by_centrality(row_idx, row_letters, seat_map, seats_per_row, booked, assigned):
+    """
+    Fill seats in the next rows (forward), ordered by centrality, skipping booked or already assigned seats.
+    Returns a list of available seat labels.
+    """
     filled = []
     for next_row_idx in range(row_idx + 1, len(row_letters)):
         next_row = row_letters[next_row_idx]
@@ -204,6 +217,10 @@ def fill_next_rows_by_centrality(row_idx, row_letters, seat_map, seats_per_row, 
     return filled
 
 def fill_left_in_row(row, start_num, booked, assigned):
+    """
+    Fill seats to the left of the starting seat in the same row, skipping booked or already assigned seats.
+    Returns a list of available seat labels.
+    """
     filled = []
     for n in range(start_num - 1, 0, -1):
         seat = f"{row}{n}"
@@ -212,6 +229,10 @@ def fill_left_in_row(row, start_num, booked, assigned):
     return filled
 
 def fill_prev_rows_by_centrality(row_idx, row_letters, seat_map, seats_per_row, booked, assigned):
+    """
+    Fill seats in the previous rows (backward), ordered by centrality, skipping booked or already assigned seats.
+    Returns a list of available seat labels.
+    """
     filled = []
     for prev_row_idx in range(row_idx - 1, -1, -1):
         prev_row = row_letters[prev_row_idx]

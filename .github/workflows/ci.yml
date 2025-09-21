@@ -89,5 +89,5 @@ jobs:
       - name: Upload Sphinx HTML docs
         uses: actions/upload-artifact@v4
         with:
-          name: sphinx-html-docs
+          name: sphinx-html-docs-${{ github.run_number }}
           path: docs/_build/html

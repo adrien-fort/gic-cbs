@@ -1,3 +1,11 @@
+
+"""
+logger.py
+---------
+This module provides logging utilities for the GIC Cinema Booking System.
+It configures a file-based logger and exposes helper functions for info, warning, and error logs.
+"""
+
 import logging
 from datetime import datetime
 import os
@@ -18,10 +26,25 @@ logging.basicConfig(
 logger = logging.getLogger('gic-cbs')
 
 def log_info(message):
+    """
+    Log an informational message to the log file.
+    Args:
+        message (str): The message to log.
+    """
     logger.info(message)
 
 def log_warning(message):
+    """
+    Log a warning message to the log file.
+    Args:
+        message (str): The message to log.
+    """
     logger.warning(message)
 
 def log_error(message):
+    """
+    Log an error message to the log file.
+    Args:
+        message (str): The message to log.
+    """
     logger.error(message)

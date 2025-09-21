@@ -1,7 +1,20 @@
+
+"""
+main.py
+-------
+Entry point and main user interface loop for the GIC Cinema Booking System.
+Handles movie creation, main menu, and ticket booking flows.
+"""
+
 from src import logger, movie, booking
 from src.validation import movie_validation, is_positive_integer, ticket_num_validation
 
 def prompt_movie_creation():
+    """
+    Prompt the user to define a movie title and seating map.
+    Returns:
+        dict: The created movie data.
+    """
     logger.log_info("Prompting user for movie title and seating map.")
     while True:
         user_input = input("Please define movie title and seating map in [Title] [Row] [SeatsPerRow] format:\n> ")
@@ -17,6 +30,11 @@ def prompt_movie_creation():
             print("Invalid input. Please try again.")
 
 def main_menu_loop(movie_data):
+    """
+    Display the main menu and handle user selections for booking or checking bookings.
+    Args:
+        movie_data (dict): The current movie data.
+    """
     while True:
         print("\nWelcome to GIC Cinemas")
         print("[1] Book tickets for "+ movie_data["title"] + " (" + str(movie.movie_available_seats(movie_data)) + " seats available)")
@@ -38,6 +56,11 @@ def main_menu_loop(movie_data):
             print("Invalid selection. Please try again.")
 
 def booking_tickets_loop(movie_data):
+    """
+    Prompt the user to enter the number of tickets to book and handle booking logic.
+    Args:
+        movie_data (dict): The current movie data.
+    """
     while True:
         ticket_input = input("\nEnter number of tickets to book, or enter blank to go back to main menu:\n> ")
         logger.log_info(f"Booking prompt received input: '{ticket_input}'")
@@ -66,6 +89,10 @@ def booking_tickets_loop(movie_data):
 
 
 def main():
+    """
+    Main entry point for the GIC Cinema Booking System application.
+    Initializes the app, prompts for movie creation, and starts the main menu loop.
+    """
     from src import logger
     logger.log_info("GIC CBS application started.")
     print("\nWelcome to the GIC CBS application!")
