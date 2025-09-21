@@ -30,23 +30,21 @@ def book_ticket(movie_json, num_tickets):
         print(f"\nBooking ID: {booking_id}")
         print(movie_display(movie_json))
         seating_input = input("\nEnter blank to accept seat selection, or enter new seating position:\n> ")
-        seating_input = seating_input.strip().upper() # Normalize input
-        if seating_input.strip() == "":
+        status = is_valid_seat(movie_json, seating_input)
+        if status == "blank":
             movie_json = confirm_reservation(movie_json, booking_id)
             save_movie(movie_json)  # Save the updated movie JSON
             print(f"\nBooking ID: {booking_id} confirmed.\n")
             break
+        elif status == "valid":
+            assigned_seats = custom_seating(movie_json, num_tickets, seating_input.strip().upper())
+            for b in movie_json["bookings"]:
+                if b["ID"] == booking_id:
+                    b["seats"] = assigned_seats
+                    break
+            save_movie(movie_json)  # Save the updated movie JSON
         else:
-            if is_valid_seat(movie_json, seating_input.strip()):
-                # Accept the new seat if valid (future: allow seat modification logic)
-                assigned_seats = custom_seating(movie_json, num_tickets, seating_input.strip()) 
-                for b in movie_json["bookings"]:
-                    if b["ID"] == booking_id:
-                        b["seats"] = assigned_seats
-                        break
-                save_movie(movie_json)  # Save the updated movie JSON
-            else:
-                print(f"Seat {seating_input.strip()} is not valid. Please try again or enter blank to accept.")
+            print(f"Seat {seating_input.strip()} is not valid. Please try again or enter blank to accept.")
     return movie_json
 
 def get_booking_id(movie_json):
@@ -171,6 +169,40 @@ def default_seating(movie_json, num_tickets):
     # Assign up to num_tickets seats from the ordered list
     return ordered_seats[:num_tickets]
 
+def fill_right_in_row(row, start_num, seats_per_row, booked, assigned):
+    filled = []
+    for n in range(start_num, seats_per_row + 1):
+        seat = f"{row}{n}"
+        if seat not in booked and seat not in assigned and seat not in filled:
+            filled.append(seat)
+    return filled
+
+def fill_next_rows_by_centrality(row_idx, row_letters, seat_map, seats_per_row, booked, assigned):
+    filled = []
+    for next_row_idx in range(row_idx + 1, len(row_letters)):
+        next_row = row_letters[next_row_idx]
+        available = [s for s in seat_map[next_row] if s not in booked and s not in assigned and s not in filled]
+        ordered = seat_sort_order(available, seats_per_row)
+        filled.extend(ordered)
+    return filled
+
+def fill_left_in_row(row, start_num, booked, assigned):
+    filled = []
+    for n in range(start_num - 1, 0, -1):
+        seat = f"{row}{n}"
+        if seat not in booked and seat not in assigned and seat not in filled:
+            filled.append(seat)
+    return filled
+
+def fill_prev_rows_by_centrality(row_idx, row_letters, seat_map, seats_per_row, booked, assigned):
+    filled = []
+    for prev_row_idx in range(row_idx - 1, -1, -1):
+        prev_row = row_letters[prev_row_idx]
+        available = [s for s in seat_map[prev_row] if s not in booked and s not in assigned and s not in filled]
+        ordered = seat_sort_order(available, seats_per_row)
+        filled.extend(ordered)
+    return filled
+
 def custom_seating(movie_json, num_tickets, seat_input):
     """
     Assigns seats starting from the user-selected seat, filling to the right in the same row.
@@ -188,45 +220,26 @@ def custom_seating(movie_json, num_tickets, seat_input):
     row_idx = row_letters.index(row)
 
     # 1. Fill to the right in the same row
-    for n in range(start_num, seats_per_row + 1):
-        seat = f"{row}{n}"
-        if seat not in booked and seat not in assigned:
-            assigned.append(seat)
-        if len(assigned) == num_tickets:
-            return assigned
+    right = fill_right_in_row(row, start_num, seats_per_row, booked, assigned)
+    assigned.extend(right)
+    if len(assigned) >= num_tickets:
+        return assigned[:num_tickets]
 
     # 2. Fill next rows (forward), by centrality
-    next_row_idx = row_idx + 1
-    while len(assigned) < num_tickets and next_row_idx < len(row_letters):
-        next_row = row_letters[next_row_idx]
-        available = [s for s in seat_map[next_row] if s not in booked and s not in assigned]
-        ordered = seat_sort_order(available, seats_per_row)
-        for seat in ordered:
-            assigned.append(seat)
-            if len(assigned) == num_tickets:
-                return assigned
-        next_row_idx += 1
+    next_rows = fill_next_rows_by_centrality(row_idx, row_letters, seat_map, seats_per_row, booked, assigned)
+    assigned.extend(next_rows)
+    if len(assigned) >= num_tickets:
+        return assigned[:num_tickets]
 
-    # 3. Fill to the left in the original row (must do this before previous rows)
-    for n in range(start_num - 1, 0, -1):
-        seat = f"{row}{n}"
-        if seat not in booked and seat not in assigned:
-            assigned.append(seat)
-        if len(assigned) == num_tickets:
-            return assigned
+    # 3. Fill to the left in the original row
+    left = fill_left_in_row(row, start_num, booked, assigned)
+    assigned.extend(left)
+    if len(assigned) >= num_tickets:
+        return assigned[:num_tickets]
 
     # 4. Fill previous rows (backward), by centrality
-    prev_row_idx = row_idx - 1
-    while len(assigned) < num_tickets and prev_row_idx >= 0:
-        prev_row = row_letters[prev_row_idx]
-        available = [s for s in seat_map[prev_row] if s not in booked and s not in assigned]
-        ordered = seat_sort_order(available, seats_per_row)
-        for seat in ordered:
-            assigned.append(seat)
-            if len(assigned) == num_tickets:
-                return assigned
-        prev_row_idx -= 1
-
-    return assigned
+    prev_rows = fill_prev_rows_by_centrality(row_idx, row_letters, seat_map, seats_per_row, booked, assigned)
+    assigned.extend(prev_rows)
+    return assigned[:num_tickets]
 
 

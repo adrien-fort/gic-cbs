@@ -58,28 +58,24 @@ def ticket_num_validation(ticket_input, movie_json):
 
 def is_valid_seat(movie_json, user_input):
     """
-    Returns True if user_input is not booked (status 'B').
-    Reserved (status 'R') and unoccupied seats are valid.
+    Returns 'blank' if input is blank (accept default), 'valid' if seat is valid and available, 'invalid' otherwise.
     """
-    # Check if seat exists in the seat map
-    rows = movie_json["row"]
-    seats_per_row = movie_json["seats_per_row"]
-    seat_map = {}
-    import string
-    for i in range(rows):
-        row_letter = string.ascii_uppercase[i]
-        seat_map[row_letter] = [f"{row_letter}{n+1}" for n in range(seats_per_row)]
-    # Validate seat exists in map
-    found = False
-    for row_seats in seat_map.values():
-        if user_input in row_seats:
-            found = True
-            break
-    if not found:
-        return False
-    # Check bookings for status B
-    for booking in movie_json.get("bookings", []):
-        if booking.get("status") == "B" and user_input in booking.get("seats", []):
-            return False
-    return True
+    from src.booking import build_seat_map, get_booked_seats
+    if user_input.strip() == "":
+        return "blank"
+    seat_input = user_input.upper()
+    seat_map = build_seat_map(movie_json)
+    row = seat_input[0]
+    try:
+        int(seat_input[1:])
+    except (ValueError, IndexError):
+        return "invalid"
+    if row not in seat_map:
+        return "invalid"
+    if seat_input not in seat_map[row]:
+        return "invalid"
+    booked = get_booked_seats(movie_json)
+    if seat_input in booked:
+        return "invalid"
+    return "valid"
 

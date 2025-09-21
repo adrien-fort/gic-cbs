@@ -5,7 +5,8 @@ from src.movie import create_movie
 from src.booking import get_row_center, seat_sort_order, book_ticket, default_seating
 from src.booking import seat_sort_order, build_seat_map, get_booked_seats, get_booking_id
 from src.booking import confirm_reservation, ordered_free_seat_map, custom_seating
- 
+from src.booking import fill_right_in_row, fill_next_rows_by_centrality, fill_left_in_row, fill_prev_rows_by_centrality
+
 
 # Tests for ordered_free_seat_map
 def test_ordered_free_seat_map_2x3():
@@ -364,3 +365,48 @@ def test_default_seating_with_existing_random_groups():
         assigned_seats2 = movie["bookings"][-1]["seats"]
         assert assigned_seats2 == ["A1", "B4"]  # A1, B4 are the most middle in A, B
 
+# --- Tests for custom_seating helpers ---
+def test_fill_right_in_row_basic():
+    # Row B, start at 3, 6 seats, no booked
+    result = fill_right_in_row('B', 3, 6, set(), [])
+    assert result == ['B3', 'B4', 'B5', 'B6']
+
+def test_fill_right_in_row_with_booked_and_assigned():
+    result = fill_right_in_row('A', 2, 5, {'A3'}, ['A4'])
+    assert result == ['A2', 'A5']
+
+def test_fill_next_rows_by_centrality_basic():
+    seat_map = {'A': ['A1', 'A2', 'A3'], 'B': ['B1', 'B2', 'B3'], 'C': ['C1', 'C2', 'C3']}
+    row_letters = ['A', 'B', 'C']
+    # Start at row A (idx 0), 3 seats per row, no booked/assigned
+    result = fill_next_rows_by_centrality(0, row_letters, seat_map, 3, set(), [])
+    # B2, B3, B1, C2, C3, C1 (centrality)
+    assert result == ['B2', 'B3', 'B1', 'C2', 'C3', 'C1']
+
+def test_fill_next_rows_by_centrality_with_booked():
+    seat_map = {'A': ['A1', 'A2', 'A3'], 'B': ['B1', 'B2', 'B3'], 'C': ['C1', 'C2', 'C3']}
+    row_letters = ['A', 'B', 'C']
+    result = fill_next_rows_by_centrality(0, row_letters, seat_map, 3, {'B2', 'C2'}, ['B1'])
+    assert result == ['B3', 'C3', 'C1']
+
+def test_fill_left_in_row_basic():
+    result = fill_left_in_row('C', 4, set(), [])
+    assert result == ['C3', 'C2', 'C1']
+
+def test_fill_left_in_row_with_booked_and_assigned():
+    result = fill_left_in_row('D', 5, {'D3'}, ['D2'])
+    assert result == ['D4', 'D1']
+
+def test_fill_prev_rows_by_centrality_basic():
+    seat_map = {'A': ['A1', 'A2', 'A3'], 'B': ['B1', 'B2', 'B3'], 'C': ['C1', 'C2', 'C3']}
+    row_letters = ['A', 'B', 'C']
+    # Start at row C (idx 2), 3 seats per row, no booked/assigned
+    result = fill_prev_rows_by_centrality(2, row_letters, seat_map, 3, set(), [])
+    # B2, B3, B1, A2, A3, A1 (centrality)
+    assert result == ['B2', 'B3', 'B1', 'A2', 'A3', 'A1']
+
+def test_fill_prev_rows_by_centrality_with_booked():
+    seat_map = {'A': ['A1', 'A2', 'A3'], 'B': ['B1', 'B2', 'B3'], 'C': ['C1', 'C2', 'C3']}
+    row_letters = ['A', 'B', 'C']
+    result = fill_prev_rows_by_centrality(2, row_letters, seat_map, 3, {'B2', 'A2'}, ['B1'])
+    assert result == ['B3', 'A3', 'A1']
