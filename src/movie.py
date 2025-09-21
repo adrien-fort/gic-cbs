@@ -74,7 +74,7 @@ def movie_display(movie):
     # Footer with seat numbers
     footer = '  '
     for n in range(1, seats_per_row + 1):
-        if n < 10:
+        if n < 10 and seats_per_row > 10:
             footer += str(n) + '  '
         else:
             footer += str(n) + ' '

@@ -55,3 +55,33 @@ def test_ticket_num_validation():
         "seats": ["A1", "A2", "A3", "A4", "A5", "A6"]
     })
     assert ticket_num_validation("78", movie_with_booked) is False
+
+def test_is_valid_seat_positive():
+    from src.validation import is_valid_seat
+    from src.movie import create_movie
+    movie = create_movie("Inception 8 10")
+    # No bookings, seat is unoccupied
+    assert is_valid_seat(movie, "A2") is True
+
+def test_is_valid_seat_reserved():
+    from src.validation import is_valid_seat
+    from src.movie import create_movie
+    movie = create_movie("Inception 8 10")
+    movie["bookings"].append({"ID": "GIC0001", "status": "R", "seats": ["A2"]})
+    assert is_valid_seat(movie, "A2") is True
+
+
+def test_is_valid_seat_booked():
+    from src.validation import is_valid_seat
+    from src.movie import create_movie
+    movie = create_movie("Inception 8 10")
+    movie["bookings"].append({"ID": "GIC0001", "status": "B", "seats": ["A2"]})
+    assert is_valid_seat(movie, "A2") is False
+
+
+def test_is_valid_seat_nonexistent():
+    from src.validation import is_valid_seat
+    from src.movie import create_movie
+    movie = create_movie("Inception 8 10")
+    assert is_valid_seat(movie, "Z99") is False
+

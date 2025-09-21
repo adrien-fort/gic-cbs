@@ -4,7 +4,7 @@ from unittest.mock import patch
 from src.movie import create_movie
 from src.booking import get_row_center, seat_sort_order, book_ticket, default_seating
 from src.booking import seat_sort_order, build_seat_map, get_booked_seats, get_booking_id
-from src.booking import confirm_reservation, ordered_free_seat_map
+from src.booking import confirm_reservation, ordered_free_seat_map, custom_seating
  
 
 # Tests for ordered_free_seat_map
@@ -96,6 +96,25 @@ def test_get_booked_seats_with_bookings():
     }
     assert get_booked_seats(movie_json) == {"A1", "A2", "B3"}
 
+def test_get_booked_seats_ignores_reserved():
+    movie_json = {
+        "bookings": [
+            {"ID": "GIC0001", "status": "B", "seats": ["A1", "A2"]},
+            {"ID": "GIC0002", "status": "R", "seats": ["B3", "A2"]}
+        ]
+    }
+    # Only 'B' seats should be included, 'R' seats ignored even if same seat label (which shouldn't happen)
+    assert get_booked_seats(movie_json) == {"A1", "A2"}
+
+def test_get_booked_seats_only_reserved():
+    movie_json = {
+        "bookings": [
+            {"ID": "GIC0001", "status": "R", "seats": ["A1", "A2"]}
+        ]
+    }
+    # No 'B' bookings, should return empty set
+    assert get_booked_seats(movie_json) == set()
+
 ## Tests for get_booking_id
 def test_get_booking_id_empty():
     movie = create_movie("Inception 8 10")
@@ -154,7 +173,7 @@ def test_confirm_reservation_nonexistent_id():
     # No change expected
     assert updated_movie["bookings"][0]["status"] == "R"
 
-# --- Tests for default_seating
+## Tests for default_seating
 def test_default_seating_basic_2_seats():
     movie = create_movie("Inception 3 3")
     assigned = default_seating(movie, 2)
@@ -185,6 +204,88 @@ def test_default_seating_with_bookings_large_group():
     assigned = default_seating(movie, 7)
     # Should pick most central available: A5, A6, A1, B4, B5, B2, B6
     assert assigned == ["A5", "A6", "A1", "B4", "B5", "B2", "B6"]
+
+##Tests for custom_seating
+def test_custom_seating_basic():
+    movie = create_movie("Inception 8 10")
+    # No prior bookings
+    seats = custom_seating(movie, 4, "B2")
+    assert seats == ["B2", "B3", "B4", "B5"]
+
+def test_custom_seating_with_booked():
+    movie = create_movie("Inception 4 5")
+    # Book B4
+    movie["bookings"].append({"ID": "GIC0001", "status": "B", "seats": ["B4"]})
+    seats = custom_seating(movie, 3, "B2")
+    assert seats == ["B2", "B3", "B5"]
+
+def test_custom_seating_overflow():
+    movie = create_movie("Inception 4 5")
+    # Book B3 and C4
+    movie["bookings"].append({"ID": "GIC0001", "status": "B", "seats": ["B3"]})
+    movie["bookings"].append({"ID": "GIC0002", "status": "B", "seats": ["C4"]})
+    seats = custom_seating(movie, 7, "B2")
+    assert seats == ["B2", "B4", "B5", "C3", "C2", "C5", "C1"]
+
+def test_custom_seating_reserved_seat():
+    movie = create_movie("Inception 4 5")
+    # Reserve B4 (status R)
+    movie["bookings"].append({"ID": "GIC0001", "status": "R", "seats": ["B4"]})
+    # Should still be able to assign B4
+    seats = custom_seating(movie, 3, "B2")
+    assert seats == ["B2", "B3", "B4"]
+
+def test_custom_seating_reserved_and_booked():
+    movie = create_movie("Inception 4 5")
+    # Reserve B4 (status R), book B3 (status B)
+    movie["bookings"].append({"ID": "GIC0001", "status": "R", "seats": ["B4"]})
+    movie["bookings"].append({"ID": "GIC0002", "status": "B", "seats": ["B3"]})
+    # Should assign B2, B4, B5 (B3 is skipped, B4 is allowed)
+    seats = custom_seating(movie, 3, "B2")
+    assert seats == ["B2", "B4", "B5"]
+
+def test_custom_seating_row_wrap():
+    movie = create_movie("Inception 4 8")
+    # No prior bookings
+    seats = custom_seating(movie, 3, "D7")
+    # Should fill D7, D8, D6 (to the right, then left in last row)
+    assert seats == ["D7", "D8", "D6"]
+
+# --- Additional large/complex custom_seating tests ---
+def test_custom_seating_large_group_overflow_multiple_rows():
+    movie = create_movie("Inception 5 8")
+    # Book some seats in next rows to force more overflow
+    movie["bookings"] = [
+        {"ID": "GIC0001", "status": "B", "seats": ["B4", "C5", "D4", "E5"]}
+    ]
+    # Start at A5, book 15 seats (should fill right in A, then next rows by centrality, then left in A, then previous rows by centrality)
+    seats = custom_seating(movie, 15, "A5")
+    expected = ["A5", "A6", "A7", "A8", "B5", "B6", "B3", "B7", "B2", "B8", "B1", "C4", "C6", "C3", "C7"]
+    assert seats == expected
+
+def test_custom_seating_full_overflow_all_rows():
+    movie = create_movie("Inception 3 6")
+    # Book some seats in all rows
+    movie["bookings"] = [
+        {"ID": "GIC0001", "status": "B", "seats": ["A3", "B4", "C2"]}
+    ]
+    # Start at B2, book 10 seats
+    seats = custom_seating(movie, 10, "B2")
+    expected = ["B2", "B3", "B5", "B6", "C4", "C3", "C5", "C6", "C1", "B1"]
+    assert seats == expected
+
+def test_custom_seating_with_sparse_and_dense_bookings():
+    movie = create_movie("Inception 4 7")
+    # Book a dense block in C, sparse in D
+    movie["bookings"] = [
+        {"ID": "GIC0001", "status": "B", "seats": ["C2", "C3", "C4", "C5", "C6"]},
+        {"ID": "GIC0002", "status": "B", "seats": ["D1", "D7"]}
+    ]
+    # Start at B4, book 8 seats
+    seats = custom_seating(movie, 8, "B4")
+    # Should fill: B4, B5, B6, B7 (right in B), C7, C1 (centrality in C), B3, B2 (left in B)
+    expected = ["B4", "B5", "B6", "B7", "C7", "C1", "D4", "D5"]
+    assert seats == expected
 
 ## Tests for book_ticket (end to end)
 def test_default_seating_large_group_with_blocked_row():

@@ -4,7 +4,7 @@ from src.validation import movie_validation, is_positive_integer, ticket_num_val
 def prompt_movie_creation():
     logger.log_info("Prompting user for movie title and seating map.")
     while True:
-        user_input = input("Please define movie title and seating map in [Title] [Row] [SeatsPerRow] format:\n")
+        user_input = input("Please define movie title and seating map in [Title] [Row] [SeatsPerRow] format:\n> ")
         is_valid = movie_validation(user_input)
         if is_valid:
             logger.log_info(f"Valid movie and seating map input received: {user_input}")
@@ -22,7 +22,7 @@ def main_menu_loop(movie_data):
         print("[1] Book tickets for "+ movie_data["title"] + " (" + str(movie.movie_available_seats(movie_data)) + " seats available)")
         print("[2] Check bookings")
         print("[3] Exit")
-        choice = input("Please enter your selection:\n")
+        choice = input("Please enter your selection:\n> ")
         if choice == "1":
             logger.log_info("User selected Booking tickets.")
             booking_tickets_loop(movie_data)
@@ -39,7 +39,7 @@ def main_menu_loop(movie_data):
 
 def booking_tickets_loop(movie_data):
     while True:
-        ticket_input = input("\nEnter number of tickets to book, or enter blank to go back to main menu:\n")
+        ticket_input = input("\nEnter number of tickets to book, or enter blank to go back to main menu:\n> ")
         logger.log_info(f"Booking prompt received input: '{ticket_input}'")
         if ticket_input.strip() == "":
             logger.log_info("User returned to main menu from booking prompt.")

@@ -24,7 +24,7 @@ def test_movie_display_basic():
         "C . . . . . . . . . .\n"
         "B . . . . . . . . . .\n"
         "A . . . o o o o . . .\n"
-        "  1  2  3  4  5  6  7  8  9  10"
+        "  1 2 3 4 5 6 7 8 9 10"
     )
     assert output.strip() == expected.strip()
 
@@ -44,7 +44,7 @@ def test_movie_display_booked():
         "----------\n"
         "B . . # .\n"
         "A # . . .\n"
-        "  1  2  3  4"
+        "  1 2 3 4"
     )
     assert output.strip() == expected.strip()
 
@@ -69,7 +69,7 @@ def test_movie_display_mixed():
         "----------\n"
         "B . . # .\n"
         "A # o . .\n"
-        "  1  2  3  4"
+        "  1 2 3 4"
     )
     assert output.strip() == expected.strip()
 

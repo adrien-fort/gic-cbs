@@ -1,6 +1,7 @@
 import string
 import copy
 from src.movie import save_movie, movie_display
+from src.validation import is_valid_seat
 
 def book_ticket(movie_json, num_tickets):
     """
@@ -28,13 +29,24 @@ def book_ticket(movie_json, num_tickets):
     while True:
         print(f"\nBooking ID: {booking_id}")
         print(movie_display(movie_json))
-        seating_input = input("\nEnter blank to accept seat selection, or enter new seating position:\n")
+        seating_input = input("\nEnter blank to accept seat selection, or enter new seating position:\n> ")
+        seating_input = seating_input.strip().upper() # Normalize input
         if seating_input.strip() == "":
             movie_json = confirm_reservation(movie_json, booking_id)
             save_movie(movie_json)  # Save the updated movie JSON
+            print(f"\nBooking ID: {booking_id} confirmed.\n")
             break
         else:
-            print("Seat selection modification not yet implemented. Please enter blank to accept.")
+            if is_valid_seat(movie_json, seating_input.strip()):
+                # Accept the new seat if valid (future: allow seat modification logic)
+                assigned_seats = custom_seating(movie_json, num_tickets, seating_input.strip()) 
+                for b in movie_json["bookings"]:
+                    if b["ID"] == booking_id:
+                        b["seats"] = assigned_seats
+                        break
+                save_movie(movie_json)  # Save the updated movie JSON
+            else:
+                print(f"Seat {seating_input.strip()} is not valid. Please try again or enter blank to accept.")
     return movie_json
 
 def get_booking_id(movie_json):
@@ -55,14 +67,12 @@ def get_booking_id(movie_json):
 def confirm_reservation(movie_json, booking_id):
     """
     Sets the status of the booking with the given ID to 'B' (booked) instead of default 'R' (reserved).
-    This isn't strictly required per requirements but would prove useful for future extensions.
-    Returns a modified copy of the movie JSON.
+    Modifies the movie_json in place.
     """
-    updated_movie = copy.deepcopy(movie_json)
-    for booking in updated_movie.get("bookings", []):
+    for booking in movie_json.get("bookings", []):
         if booking.get("ID") == booking_id:
             booking["status"] = "B"
-    return updated_movie
+    return movie_json
 
 def build_seat_map(movie_json):
     """
@@ -79,12 +89,14 @@ def build_seat_map(movie_json):
 
 def get_booked_seats(movie_json):
     """
-    Return a set of all seat labels that are already booked or reserved in the movie.
+    Return a set of all seat labels that are already booked (status 'B') in the movie.
+    Reserved (status 'R') seats are not considered booked for exclusion.
     """
     booked = set()
     for booking in movie_json.get("bookings", []):
-        for seat in booking.get("seats", []):
-            booked.add(seat)
+        if booking.get("status") == "B":
+            for seat in booking.get("seats", []):
+                booked.add(seat)
     return booked
 
 def get_row_center(seats_per_row):
@@ -158,5 +170,63 @@ def default_seating(movie_json, num_tickets):
     ordered_seats = ordered_free_seat_map(seat_map, booked)
     # Assign up to num_tickets seats from the ordered list
     return ordered_seats[:num_tickets]
+
+def custom_seating(movie_json, num_tickets, seat_input):
+    """
+    Assigns seats starting from the user-selected seat, filling to the right in the same row.
+    If not enough seats are available to the right, overflow to the next row(s) by centrality.
+    Only if still not enough, fill left from the starting point in the original row.
+    Returns a list of assigned seat labels.
+    """
+    seat_map = build_seat_map(movie_json)
+    booked = get_booked_seats(movie_json)
+    assigned = []
+    row = seat_input[0]
+    start_num = int(seat_input[1:])
+    seats_per_row = movie_json["seats_per_row"]
+    row_letters = list(seat_map.keys())
+    row_idx = row_letters.index(row)
+
+    # 1. Fill to the right in the same row
+    for n in range(start_num, seats_per_row + 1):
+        seat = f"{row}{n}"
+        if seat not in booked and seat not in assigned:
+            assigned.append(seat)
+        if len(assigned) == num_tickets:
+            return assigned
+
+    # 2. Fill next rows (forward), by centrality
+    next_row_idx = row_idx + 1
+    while len(assigned) < num_tickets and next_row_idx < len(row_letters):
+        next_row = row_letters[next_row_idx]
+        available = [s for s in seat_map[next_row] if s not in booked and s not in assigned]
+        ordered = seat_sort_order(available, seats_per_row)
+        for seat in ordered:
+            assigned.append(seat)
+            if len(assigned) == num_tickets:
+                return assigned
+        next_row_idx += 1
+
+    # 3. Fill to the left in the original row (must do this before previous rows)
+    for n in range(start_num - 1, 0, -1):
+        seat = f"{row}{n}"
+        if seat not in booked and seat not in assigned:
+            assigned.append(seat)
+        if len(assigned) == num_tickets:
+            return assigned
+
+    # 4. Fill previous rows (backward), by centrality
+    prev_row_idx = row_idx - 1
+    while len(assigned) < num_tickets and prev_row_idx >= 0:
+        prev_row = row_letters[prev_row_idx]
+        available = [s for s in seat_map[prev_row] if s not in booked and s not in assigned]
+        ordered = seat_sort_order(available, seats_per_row)
+        for seat in ordered:
+            assigned.append(seat)
+            if len(assigned) == num_tickets:
+                return assigned
+        prev_row_idx -= 1
+
+    return assigned
 
 
