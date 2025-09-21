@@ -1,3 +1,9 @@
+"""
+test_booking.py
+---------------
+Unit tests for the booking module, covering seat assignment, booking creation, and related helpers.
+"""
+
 import pytest
 import builtins
 from unittest.mock import patch

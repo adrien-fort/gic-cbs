@@ -1,3 +1,9 @@
+"""
+test_main.py
+-----------
+Unit tests for the main application entry point and user interaction flows.
+"""
+
 import pytest
 from unittest import mock
 from src.main import main  # Updated import for src directory

@@ -1,9 +1,11 @@
-from src.logger import log_info, log_warning, log_error
+
 """
 movie.py
 --------
 This module contains functions related to movie creation and management.
 """
+
+from src.logger import log_info, log_warning, log_error
 
 def create_movie(user_input):
     log_info(f"Creating movie with input: '{user_input}'")

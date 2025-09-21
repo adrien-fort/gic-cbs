@@ -1,3 +1,10 @@
+
+"""
+test_logger.py
+--------------
+Unit tests for the logger module, verifying log file creation and log message content.
+"""
+
 import os
 import glob
 import re

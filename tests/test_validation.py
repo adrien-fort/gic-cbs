@@ -1,3 +1,9 @@
+"""
+test_validation.py
+-----------------
+Unit tests for the validation module, covering input validation for movies, tickets, and seats.
+"""
+
 def test_movie_validation():
     from src.validation import movie_validation
     # True cases

@@ -1,3 +1,9 @@
+"""
+test_booking_advanced.py
+-----------------------
+Unit tests for the advanced booking module, covering contiguous block assignment and advanced seat logic.
+"""
+
 import pytest
 import builtins
 from unittest.mock import patch

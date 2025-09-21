@@ -1,3 +1,9 @@
+"""
+test_movie.py
+------------
+Unit tests for the movie module, covering movie creation, seat availability, and display logic.
+"""
+
 from src.movie import create_movie, movie_available_seats, movie_display, build_seat_display_map
 import os
 import json

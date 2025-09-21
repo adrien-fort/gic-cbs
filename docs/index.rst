@@ -12,7 +12,7 @@ gic-cbs
    Setup
    Usage
    api_reference
-   Tests
+   tests_reference
    Future Improvements
    Contributing
 

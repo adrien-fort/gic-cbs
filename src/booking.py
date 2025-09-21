@@ -1,13 +1,15 @@
+
+"""
+booking.py
+---------
+This module contains functions related to movie booking. The book_ticket function drives the flow.
+The two main approaches to seating are default_seating (best available) and custom_seating (user selected).
+"""
+
 from src.logger import log_info, log_warning, log_error
 import string
 from src.movie import save_movie, movie_display
 from src.validation import is_valid_seat
-"""
-Booking.py
---------
-This module contains functions related to movie booking the book_ticket function drives the flow.
-The two main approaches to seating are default_seating (best available) and custom_seating (user selected).
-"""
 
 def book_ticket(movie_json, num_tickets):
     """

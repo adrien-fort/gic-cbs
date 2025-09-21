@@ -1,9 +1,11 @@
-from src.logger import log_info, log_warning, log_error
+
 """
 validation.py
 -------------
 This module contains validation functions for the GIC CBS application.
 """
+
+from src.logger import log_info, log_warning, log_error
 
 def is_positive_integer(value):
     log_info(f"Validating if value is positive integer: {value}")
