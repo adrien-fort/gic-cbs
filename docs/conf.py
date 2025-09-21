@@ -10,10 +10,12 @@ author = 'Your Name'
 release = '0.1.0'
 
 
+
 # -- Path setup --------------------------------------------------------------
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../src'))
+sys.path.insert(0, os.path.abspath('../src'))  # For src imports
+sys.path.insert(0, os.path.abspath('..'))      # For project root (tests, etc)
 
 # -- General configuration ---------------------------------------------------
 

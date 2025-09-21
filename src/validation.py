@@ -101,3 +101,21 @@ def is_valid_seat(movie_json, user_input):
     log_info(f"Seat '{seat_input}' is valid and available.")
     return "valid"
 
+def is_valid_booking(movie_json, booking_id):
+    """
+    Returns True if booking_id exists in the movie's bookings, False otherwise.
+    Handles invalid or non-string IDs gracefully.
+    """
+    log_info(f"Validating booking ID: {booking_id}")
+    if not isinstance(movie_json, dict) or "bookings" not in movie_json:
+        log_warning("movie_json is not valid or missing 'bookings'.")
+        return False
+    if not isinstance(booking_id, str):
+        log_warning("Booking ID is not a string.")
+        return False
+    for booking in movie_json["bookings"]:
+        if booking.get("ID") == booking_id:
+            log_info(f"Booking ID '{booking_id}' found.")
+            return True
+    log_info(f"Booking ID '{booking_id}' not found.")
+    return False

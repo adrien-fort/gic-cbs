@@ -23,6 +23,9 @@ coverage.xml
 *.log
 logs/movie.json
 
+
+# Sphinx documentation build
+docs/_build/
 # Distribution / packaging
 build/
 dist/

@@ -7,7 +7,7 @@ Handles movie creation, main menu, and ticket booking flows.
 """
 
 from src import logger, movie, booking
-from src.validation import movie_validation, is_positive_integer, ticket_num_validation
+from src.validation import movie_validation, is_positive_integer, ticket_num_validation, is_valid_booking
 
 def prompt_movie_creation():
     """
@@ -87,6 +87,26 @@ def booking_tickets_loop(movie_data):
                 logger.log_warning(f"Ticket input '{ticket_input}' failed ticket_num_validation.")
                 print("Invalid input. Please enter a valid number of tickets or blank to go back.")
 
+def check_booking_loop(movie_data):
+    """
+    Prompt the user to enter a booking ID in a loop to show the details of the booking selected.
+    Args:
+        movie_data (dict): The current movie data.
+    """
+    while True:
+        booking_id = input("\nEnter booking ID, or enter blank to go back to main menu:\n> ")
+        if booking_id.strip() == "":
+            logger.log_info("User exited check booking loop to return to main menu.")
+            print("Returning to main menu.")
+            break
+        logger.log_info(f"User entered booking ID: {booking_id.strip()}")
+        if is_valid_booking(movie_data, booking_id.strip()):
+            logger.log_info(f"Booking ID '{booking_id.strip()}' is valid.")
+            print(f"Booking ID '{booking_id.strip()}' found. (Details would be shown here.)")
+            # Future: Show booking details, allow unbooking, etc.
+        else:
+            logger.log_warning(f"Booking ID '{booking_id.strip()}' is invalid.")
+            print(f"Booking ID '{booking_id.strip()}' not found. Please try again.")
 
 def main():
     """

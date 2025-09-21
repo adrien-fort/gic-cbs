@@ -4,6 +4,9 @@ test_validation.py
 Unit tests for the validation module, covering input validation for movies, tickets, and seats.
 """
 
+import pytest
+from src import validation
+
 def test_movie_validation():
     from src.validation import movie_validation
     # True cases
@@ -35,8 +38,6 @@ def test_movie_validation():
     assert movie_validation("Inception 27 10") is False
     # SeatsPerRow exceeds 50
     assert movie_validation("Inception 8 51") is False
-import pytest
-from src import validation
 
 def test_is_positive_integer():
     assert validation.is_positive_integer(5) is True
@@ -76,7 +77,6 @@ def test_is_valid_seat_reserved():
     movie["bookings"].append({"ID": "GIC0001", "status": "R", "seats": ["A2"]})
     assert is_valid_seat(movie, "A2") == "valid"
 
-
 def test_is_valid_seat_booked():
     from src.validation import is_valid_seat
     from src.movie import create_movie
@@ -84,10 +84,48 @@ def test_is_valid_seat_booked():
     movie["bookings"].append({"ID": "GIC0001", "status": "B", "seats": ["A2"]})
     assert is_valid_seat(movie, "A2") == "invalid"
 
-
 def test_is_valid_seat_nonexistent():
     from src.validation import is_valid_seat
     from src.movie import create_movie
     movie = create_movie("Inception 8 10")
     assert is_valid_seat(movie, "Z99") == "invalid"
 
+def test_is_valid_booking_false_for_nonexistent():
+    from src.validation import is_valid_booking
+    movie_json = {
+        "title": "Inception",
+        "row": 8,
+        "seats_per_row": 8,
+        "bookings": [
+            {"ID": "GIC0001", "status": "B", "seats": ["A1", "A2"]},
+            {"ID": "GIC0002", "status": "B", "seats": ["A3", "A4"]},
+        ]
+    }
+    assert is_valid_booking(movie_json, "GIC0003") is False
+
+def test_is_valid_booking_true_for_existing():
+    from src.validation import is_valid_booking
+    movie_json = {
+        "title": "Inception",
+        "row": 8,
+        "seats_per_row": 8,
+        "bookings": [
+            {"ID": "GIC0001", "status": "B", "seats": ["A1", "A2"]},
+            {"ID": "GIC0002", "status": "B", "seats": ["A3", "A4"]},
+        ]
+    }
+    assert is_valid_booking(movie_json, "GIC0002") is True
+
+def test_is_valid_booking_false_for_random_inputs():
+    from src.validation import is_valid_booking
+    movie_json = {
+        "title": "Inception",
+        "row": 8,
+        "seats_per_row": 8,
+        "bookings": [
+            {"ID": "GIC0001", "status": "B", "seats": ["A1", "A2"]},
+            {"ID": "GIC0002", "status": "B", "seats": ["A3", "A4"]},
+        ]
+    }
+    for invalid in [None, "", "booking01", "GIC", "0001", 123, [], {}, "GIC9999"]:
+        assert is_valid_booking(movie_json, invalid) is False

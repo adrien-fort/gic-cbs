@@ -30,3 +30,8 @@ Tests Reference
     :members:
     :undoc-members:
     :show-inheritance:
+
+.. automodule:: tests.test_check_booking
+    :members:
+    :undoc-members:
+    :show-inheritance:
