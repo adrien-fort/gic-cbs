@@ -6,7 +6,7 @@ Entry point and main user interface loop for the GIC Cinema Booking System.
 Handles movie creation, main menu, and ticket booking flows.
 """
 
-from src import logger, movie, booking
+from src import logger, movie, booking, check_booking
 from src.validation import movie_validation, is_positive_integer, ticket_num_validation, is_valid_booking
 
 def prompt_movie_creation():
@@ -46,7 +46,7 @@ def main_menu_loop(movie_data):
             booking_tickets_loop(movie_data)
         elif choice == "2":
             logger.log_info("Checking bookings - feature not yet implemented.")
-            print("Checking bookings - feature not yet implemented.")
+            check_booking_loop(movie_data)
         elif choice == "3":
             logger.log_info("Exiting application.")
             print("Thank you for using GIC Cinemas system. Bye!")
@@ -102,8 +102,7 @@ def check_booking_loop(movie_data):
         logger.log_info(f"User entered booking ID: {booking_id.strip()}")
         if is_valid_booking(movie_data, booking_id.strip()):
             logger.log_info(f"Booking ID '{booking_id.strip()}' is valid.")
-            print(f"Booking ID '{booking_id.strip()}' found. (Details would be shown here.)")
-            # Future: Show booking details, allow unbooking, etc.
+            movie_data = check_booking.view_booking(movie_data, booking_id.strip())
         else:
             logger.log_warning(f"Booking ID '{booking_id.strip()}' is invalid.")
             print(f"Booking ID '{booking_id.strip()}' not found. Please try again.")
@@ -118,8 +117,6 @@ def main():
     print("\nWelcome to the GIC CBS application!")
     movie_data = prompt_movie_creation()
     main_menu_loop(movie_data)
-    print("Thank you for using GIC Cinemas system. Bye!")
-
 
 
 if __name__ == "__main__":
