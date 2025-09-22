@@ -1,32 +1,38 @@
 API Reference
 =============
 
-.. automodule:: booking
+.. automodule:: src.booking
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: booking_advanced
+.. automodule:: src.booking_advanced
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: logger
+.. automodule:: src.logger
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: main
+.. automodule:: src.main
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: movie
+.. automodule:: src.movie
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: validation
+
+.. automodule:: src.validation
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: src.movie_classes
     :members:
     :undoc-members:
     :show-inheritance:

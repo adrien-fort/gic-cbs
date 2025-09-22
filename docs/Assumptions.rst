@@ -5,9 +5,8 @@ The code is currently designed around several assumptions:
     | 1)The movie name can be more than one word and even have a number (e.g. Die Hard 2)
     | 2)0 is not an acceptable number for # of rows or # of seats per row, this would not make sense in the real world
     | 3)While the current code wouldn't allow for a booking ID to be skipped the code is currently build to create a new ID which is +1 from the max existing ID 
-    | 4)The requirements never mention the need for a group booking to be contiguous so the code is built around filling seats based on order provided in requirements
-    | 5)The requirements did not fully specify how to handle seating allocation when a user choose  stating seat for a booking greater than remaining seats until end of seats so decision was made to fill leftwise after the requirements are fulfilled
-    
+    | 4)The requirements never mention the need for a group booking to be contiguous so the code is built around filling seats based on order provided in requirements, which means larger groups may be split across several areas between previously booked seats
+    | 5)The requirements did not fully specify how to handle seating allocation when a user choose stating seat for a booking greater than remaining seats until end of seats so decision was made to fill leftwise after the requirements are fulfilled
 
 Snippet
 --------
@@ -33,14 +32,15 @@ Snippet
             return False
         return True
 
-2) This is simply handled the booking module via the below simple look up loop:
+3) This is handled in the booking module using the Movie and Booking classes:
 
 .. code-block:: python
 
-    for booking in bookings:
-            bid = booking.get("ID", "")
-            if bid.startswith("GIC") and bid[3:].isdigit():
-                num = int(bid[3:])
-                if num > max_id:
-                    max_id = num
-        next_id = max_id + 1
+    max_id = 0
+    for booking in movie.bookings:
+        bid = booking.id
+        if bid.startswith("GIC") and bid[3:].isdigit():
+            num = int(bid[3:])
+            if num > max_id:
+                max_id = num
+    next_id = max_id + 1

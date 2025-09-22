@@ -15,9 +15,6 @@ def test_startup_prompt(capsys):
         except KeyboardInterrupt:
             pass  # Allow test to exit gracefully
 
-    captured = capsys.readouterr()
-    # The input() prompt is not captured by capsys, so we do not check for it
-
 def test_main_invalid_then_valid_input(capsys):
     from src import main as main_module
     user_inputs = [
@@ -79,11 +76,11 @@ def test_main_menu_book_and_check(capsys):
         "2",               # number of tickets to book (valid)
         "",                # return to menu from booking prompt
         "2",               # check bookings
+        "",                # blank to exit check booking loop
         "3"                # exit
     ]
     with mock.patch("builtins.input", side_effect=user_inputs):
         main_module.main()
-    captured = capsys.readouterr()
     # Do not assert booking prompt output, as input() is not compatible with pytest capture
 
 def test_main_booking_too_many_tickets_plural(capsys):
@@ -131,73 +128,83 @@ def test_main_booking_invalid_input(capsys):
 # Unit test for prompt_movie_creation (isolated)
 def test_prompt_movie_creation_valid(monkeypatch):
     from src import main as main_module
+    from src.movie_classes import Movie
     # Simulate valid input on first try
     monkeypatch.setattr("builtins.input", lambda _: "Inception 8 10")
-    movie_data = main_module.prompt_movie_creation()
-    assert movie_data["title"] == "Inception"
-    assert movie_data["row"] == 8
-    assert movie_data["seats_per_row"] == 10
-    assert isinstance(movie_data["bookings"], list)
+    movie_obj = main_module.prompt_movie_creation()
+    assert isinstance(movie_obj, Movie)
+    assert movie_obj.title == "Inception"
+    assert movie_obj.row == 8
+    assert movie_obj.seats_per_row == 10
+    assert isinstance(movie_obj.bookings, list)
 
 def test_prompt_movie_creation_invalid_then_valid(monkeypatch):
     from src import main as main_module
+    from src.movie_classes import Movie
     inputs = iter(["badinput", "Inception 8 10"])
     monkeypatch.setattr("builtins.input", lambda _: next(inputs))
-    movie_data = main_module.prompt_movie_creation()
-    assert movie_data["title"] == "Inception"
+    movie_obj = main_module.prompt_movie_creation()
+    assert isinstance(movie_obj, Movie)
+    assert movie_obj.title == "Inception"
 
 # Unit test for main_menu_loop (isolated)
 def test_main_menu_loop_exit(monkeypatch):
     from src import main as main_module
-    # Create a dummy movie_data
-    movie_data = {"title": "Inception", "row": 8, "seats_per_row": 10, "bookings": []}
+    from src.movie_classes import Movie
+    # Create a dummy Movie instance
+    movie_obj = Movie("Inception", 8, 10)
     # Simulate user entering '3' to exit immediately
     monkeypatch.setattr("builtins.input", lambda _: "3")
     # Should exit cleanly
-    main_module.main_menu_loop(movie_data)
+    main_module.main_menu_loop(movie_obj)
 
 def test_booking_tickets_loop_exit_immediately(monkeypatch, capsys):
     from src import main as main_module
-    movie_data = {"title": "Inception", "row": 2, "seats_per_row": 2, "bookings": []}
+    from src.movie_classes import Movie
+    movie_obj = Movie("Inception", 2, 2)
     monkeypatch.setattr("builtins.input", lambda _: "")
-    main_module.booking_tickets_loop(movie_data)
+    main_module.booking_tickets_loop(movie_obj)
     captured = capsys.readouterr()
     # Should produce no output when exiting immediately
     assert captured.out == ""
 
 def test_booking_tickets_loop_invalid_input(monkeypatch, capsys):
     from src import main as main_module
-    movie_data = {"title": "Inception", "row": 2, "seats_per_row": 2, "bookings": []}
+    from src.movie_classes import Movie
+    movie_obj = Movie("Inception", 2, 2)
     inputs = iter(["notanumber", ""])  # invalid, then exit
     monkeypatch.setattr("builtins.input", lambda _: next(inputs))
-    main_module.booking_tickets_loop(movie_data)
+    main_module.booking_tickets_loop(movie_obj)
     captured = capsys.readouterr()
     assert "Invalid input. Please enter a valid number of tickets or blank to go back." in captured.out
 
 def test_booking_tickets_loop_too_many_plural(monkeypatch, capsys):
     from src import main as main_module
-    movie_data = {"title": "Inception", "row": 2, "seats_per_row": 2, "bookings": []}  # 4 seats
+    from src.movie_classes import Movie
+    movie_obj = Movie("Inception", 2, 2)
     inputs = iter(["5", ""])  # too many, then exit
     monkeypatch.setattr("builtins.input", lambda _: next(inputs))
-    main_module.booking_tickets_loop(movie_data)
+    main_module.booking_tickets_loop(movie_obj)
     captured = capsys.readouterr()
     assert "Sorry, there are only 4 seats available." in captured.out
 
 def test_booking_tickets_loop_too_many_singular(monkeypatch, capsys):
     from src import main as main_module
-    movie_data = {"title": "Inception", "row": 1, "seats_per_row": 1, "bookings": []}  # 1 seat
+    from src.movie_classes import Movie
+    movie_obj = Movie("Inception", 1, 1)
     inputs = iter(["2", ""])  # too many, then exit
     monkeypatch.setattr("builtins.input", lambda _: next(inputs))
-    main_module.booking_tickets_loop(movie_data)
+    main_module.booking_tickets_loop(movie_obj)
     captured = capsys.readouterr()
     assert "Sorry, there is only 1 seat available." in captured.out
 
 def test_booking_tickets_loop_valid(monkeypatch, capsys):
     from src import main as main_module
-    movie_data = {"title": "Inception", "row": 2, "seats_per_row": 2, "bookings": []}  # 4 seats
+    from src.movie_classes import Movie
+    movie_obj = Movie("Inception", 2, 2)
     inputs = iter(["2", ""])  # valid booking, then auto-confirm
     monkeypatch.setattr("builtins.input", lambda _: next(inputs))
-    main_module.booking_tickets_loop(movie_data)
+    main_module.booking_tickets_loop(movie_obj)
     captured = capsys.readouterr()
     # Booking now succeeds, so just check for successful reservation message
     assert "Successfully reserved 2 Inception tickets" in captured.out

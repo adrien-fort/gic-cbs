@@ -17,26 +17,34 @@ from src.booking import fill_right_in_row, fill_next_rows_by_centrality, fill_le
 # Tests for ordered_free_seat_map
 def test_ordered_free_seat_map_2x3():
     # Inception 2 3, no bookings
-    seat_map = build_seat_map({"row": 2, "seats_per_row": 3})
+    from src.movie_classes import Movie
+    movie = Movie("Inception", 2, 3)
+    seat_map = build_seat_map(movie)
     booked = set()
     result = ordered_free_seat_map(seat_map, booked)
     assert result == ["A2", "A3", "A1", "B2", "B3", "B1"]
 
 def test_ordered_free_seat_map_2x4():
     # Inception 2 4, no bookings
-    seat_map = build_seat_map({"row": 2, "seats_per_row": 4})
+    from src.movie_classes import Movie
+    movie = Movie("Inception", 2, 4)
+    seat_map = build_seat_map(movie)
     booked = set()
     result = ordered_free_seat_map(seat_map, booked)
     assert result == ["A3", "A2", "A4", "A1", "B3", "B2", "B4", "B1"]
 
 def test_ordered_free_seat_map_2x3_with_booked():
-    seat_map = build_seat_map({"row": 2, "seats_per_row": 3})
+    from src.movie_classes import Movie
+    movie = Movie("Inception", 2, 3)
+    seat_map = build_seat_map(movie)
     booked = {"A2", "B3"}
     result = ordered_free_seat_map(seat_map, booked)
     assert result == ["A3", "A1", "B2", "B1"]  # A2 and B3 removed
 
 def test_ordered_free_seat_map_2x4_with_booked():
-    seat_map = build_seat_map({"row": 2, "seats_per_row": 4})
+    from src.movie_classes import Movie
+    movie = Movie("Inception", 2, 4)
+    seat_map = build_seat_map(movie)
     booked = {"A3", "A2", "B2"}
     result = ordered_free_seat_map(seat_map, booked)
     assert result == ["A4", "A1", "B3", "B4", "B1"]  # A3, A2, B2 removed
@@ -82,8 +90,9 @@ def test_seat_sort_order_empty():
 
 ## Test for build_seat_map
 def test_build_seat_map_basic():
-    movie_json = {"row": 2, "seats_per_row": 3}
-    seat_map = build_seat_map(movie_json)
+    from src.movie_classes import Movie
+    movie = Movie("Inception", 2, 3)
+    seat_map = build_seat_map(movie)
     assert seat_map == {
         'A': ['A1', 'A2', 'A3'],
         'B': ['B1', 'B2', 'B3']
@@ -91,36 +100,37 @@ def test_build_seat_map_basic():
 
 ## Tests for get_booked_seats
 def test_get_booked_seats_empty():
-    movie_json = {"bookings": []}
-    assert get_booked_seats(movie_json) == set()
+    from src.movie_classes import Movie
+    movie = Movie("Inception", 2, 3, bookings=[])
+    assert get_booked_seats(movie) == set()
 
 def test_get_booked_seats_with_bookings():
-    movie_json = {
-        "bookings": [
-            {"ID": "GIC0001", "status": "B", "seats": ["A1", "A2"]},
-            {"ID": "GIC0002", "status": "B", "seats": ["B3"]}
-        ]
-    }
-    assert get_booked_seats(movie_json) == {"A1", "A2", "B3"}
+    from src.movie_classes import Movie, Booking
+    bookings = [
+        Booking("GIC0001", "B", ["A1", "A2"]),
+        Booking("GIC0002", "B", ["B3"])
+    ]
+    movie = Movie("Inception", 2, 3, bookings=bookings)
+    assert get_booked_seats(movie) == {"A1", "A2", "B3"}
 
 def test_get_booked_seats_ignores_reserved():
-    movie_json = {
-        "bookings": [
-            {"ID": "GIC0001", "status": "B", "seats": ["A1", "A2"]},
-            {"ID": "GIC0002", "status": "R", "seats": ["B3", "A2"]}
-        ]
-    }
+    from src.movie_classes import Movie, Booking
+    bookings = [
+        Booking("GIC0001", "B", ["A1", "A2"]),
+        Booking("GIC0002", "R", ["B3", "A2"])
+    ]
+    movie = Movie("Inception", 2, 3, bookings=bookings)
     # Only 'B' seats should be included, 'R' seats ignored even if same seat label (which shouldn't happen)
-    assert get_booked_seats(movie_json) == {"A1", "A2"}
+    assert get_booked_seats(movie) == {"A1", "A2"}
 
 def test_get_booked_seats_only_reserved():
-    movie_json = {
-        "bookings": [
-            {"ID": "GIC0001", "status": "R", "seats": ["A1", "A2"]}
-        ]
-    }
+    from src.movie_classes import Movie, Booking
+    bookings = [
+        Booking("GIC0001", "R", ["A1", "A2"])
+    ]
+    movie = Movie("Inception", 2, 3, bookings=bookings)
     # No 'B' bookings, should return empty set
-    assert get_booked_seats(movie_json) == set()
+    assert get_booked_seats(movie) == set()
 
 ## Tests for get_booking_id
 def test_get_booking_id_empty():
@@ -128,57 +138,60 @@ def test_get_booking_id_empty():
     assert get_booking_id(movie) == "GIC0001"
 
 def test_get_booking_id_with_existing():
+    from src.movie_classes import Booking
     movie = create_movie("Inception 8 10")
     # Add two bookings with IDs GIC0001 and GIC0002
-    movie["bookings"] = [
-        {"ID": "GIC0001", "status": "B", "seats": ["A1"]},
-        {"ID": "GIC0002", "status": "B", "seats": ["A2"]}
+    movie.bookings = [
+        Booking("GIC0001", "B", ["A1"]),
+        Booking("GIC0002", "B", ["A2"])
     ]
     assert get_booking_id(movie) == "GIC0003"
 
 def test_get_booking_id_with_gap():
+    from src.movie_classes import Booking
     movie = create_movie("Inception 8 10")
     # Add bookings with IDs GIC0001 and GIC0003 (gap)
-    movie["bookings"] = [
-        {"ID": "GIC0001", "status": "B", "seats": ["A1"]},
-        {"ID": "GIC0003", "status": "B", "seats": ["A3"]}
+    movie.bookings = [
+        Booking("GIC0001", "B", ["A1"]),
+        Booking("GIC0003", "B", ["A3"])
     ]
     # Should return GIC0004 (next after max)
     assert get_booking_id(movie) == "GIC0004"
 
 ## Tests for confirm_reservation
 def test_confirm_reservation_changes_status():
-    # Create a movie and add a booking with status 'R'
+    from src.movie_classes import Booking
     movie = create_movie("Inception 8 10")
     booking_id = "GIC0001"
-    movie["bookings"] = [
-        {"ID": booking_id, "status": "R", "seats": ["A1", "A2"]}
+    movie.bookings = [
+        Booking(booking_id, "R", ["A1", "A2"])
     ]
     updated_movie = confirm_reservation(movie, booking_id)
-    assert updated_movie["bookings"][0]["status"] == "B"
+    assert updated_movie.bookings[0].status == "B"
 
 def test_confirm_reservation_does_not_change_other_bookings():
-    # Create a movie and add two bookings
+    from src.movie_classes import Booking
     movie = create_movie("Inception 8 10")
-    movie["bookings"] = [
-        {"ID": "GIC0001", "status": "R", "seats": ["A1"]},
-        {"ID": "GIC0002", "status": "R", "seats": ["A2"]}
+    movie.bookings = [
+        Booking("GIC0001", "R", ["A1"]),
+        Booking("GIC0002", "R", ["A2"])
     ]
     updated_movie = confirm_reservation(movie, "GIC0002")
-    assert updated_movie["bookings"][0]["status"] == "R"
-    assert updated_movie["bookings"][1]["status"] == "B"
+    assert updated_movie.bookings[0].status == "R"
+    assert updated_movie.bookings[1].status == "B"
 
 def test_confirm_reservation_nonexistent_id():
     from src.booking import confirm_reservation
     from src.movie import create_movie
+    from src.movie_classes import Booking
     # Create a movie with one booking
     movie = create_movie("Inception 8 10")
-    movie["bookings"] = [
-        {"ID": "GIC0001", "status": "R", "seats": ["A1"]}
+    movie.bookings = [
+        Booking("GIC0001", "R", ["A1"])
     ]
     updated_movie = confirm_reservation(movie, "GIC9999")
     # No change expected
-    assert updated_movie["bookings"][0]["status"] == "R"
+    assert updated_movie.bookings[0].status == "R"
 
 ## Tests for default_seating
 def test_default_seating_basic_2_seats():
@@ -192,21 +205,23 @@ def test_default_seating_basic_4_seats():
     assert assigned == ["A2", "A3", "A1", "B2"]
 
 def test_default_seating_with_bookings_small_group():
+    from src.movie_classes import Booking
     movie = create_movie("Inception 4 5")
     # Book some seats
-    movie["bookings"] = [
-        {"ID": "GIC0001", "status": "B", "seats": ["A2", "A3", "B2"]},
-        {"ID": "GIC0002", "status": "B", "seats": ["C3"]}
+    movie.bookings = [
+        Booking("GIC0001", "B", ["A2", "A3", "B2"]),
+        Booking("GIC0002", "B", ["C3"])
     ]
     assigned = default_seating(movie, 3)
     # Should pick most central available: A4, A5, A1
     assert assigned == ["A4", "A5", "A1"]
 
 def test_default_seating_with_bookings_large_group():
+    from src.movie_classes import Booking
     movie = create_movie("Inception 5 6")
     # Book some seats
-    movie["bookings"] = [
-        {"ID": "GIC0001", "status": "B", "seats": ["A2", "A3", "A4", "B3", "C2", "D5", "E1"]}
+    movie.bookings = [
+        Booking("GIC0001", "B", ["A2", "A3", "A4", "B3", "C2", "D5", "E1"])
     ]
     assigned = default_seating(movie, 7)
     # Should pick most central available: A5, A6, A1, B4, B5, B2, B6
@@ -220,33 +235,37 @@ def test_custom_seating_basic():
     assert seats == ["B2", "B3", "B4", "B5"]
 
 def test_custom_seating_with_booked():
+    from src.movie_classes import Booking
     movie = create_movie("Inception 4 5")
     # Book B4
-    movie["bookings"].append({"ID": "GIC0001", "status": "B", "seats": ["B4"]})
+    movie.bookings.append(Booking("GIC0001", "B", ["B4"]))
     seats = custom_seating(movie, 3, "B2")
     assert seats == ["B2", "B3", "B5"]
 
 def test_custom_seating_overflow():
+    from src.movie_classes import Booking
     movie = create_movie("Inception 4 5")
     # Book B3 and C4
-    movie["bookings"].append({"ID": "GIC0001", "status": "B", "seats": ["B3"]})
-    movie["bookings"].append({"ID": "GIC0002", "status": "B", "seats": ["C4"]})
+    movie.bookings.append(Booking("GIC0001", "B", ["B3"]))
+    movie.bookings.append(Booking("GIC0002", "B", ["C4"]))
     seats = custom_seating(movie, 7, "B2")
     assert seats == ["B2", "B4", "B5", "C3", "C2", "C5", "C1"]
 
 def test_custom_seating_reserved_seat():
+    from src.movie_classes import Booking
     movie = create_movie("Inception 4 5")
     # Reserve B4 (status R)
-    movie["bookings"].append({"ID": "GIC0001", "status": "R", "seats": ["B4"]})
+    movie.bookings.append(Booking("GIC0001", "R", ["B4"]))
     # Should still be able to assign B4
     seats = custom_seating(movie, 3, "B2")
     assert seats == ["B2", "B3", "B4"]
 
 def test_custom_seating_reserved_and_booked():
+    from src.movie_classes import Booking
     movie = create_movie("Inception 4 5")
     # Reserve B4 (status R), book B3 (status B)
-    movie["bookings"].append({"ID": "GIC0001", "status": "R", "seats": ["B4"]})
-    movie["bookings"].append({"ID": "GIC0002", "status": "B", "seats": ["B3"]})
+    movie.bookings.append(Booking("GIC0001", "R", ["B4"]))
+    movie.bookings.append(Booking("GIC0002", "B", ["B3"]))
     # Should assign B2, B4, B5 (B3 is skipped, B4 is allowed)
     seats = custom_seating(movie, 3, "B2")
     assert seats == ["B2", "B4", "B5"]
@@ -260,10 +279,11 @@ def test_custom_seating_row_wrap():
 
 # --- Additional large/complex custom_seating tests ---
 def test_custom_seating_large_group_overflow_multiple_rows():
+    from src.movie_classes import Booking
     movie = create_movie("Inception 5 8")
     # Book some seats in next rows to force more overflow
-    movie["bookings"] = [
-        {"ID": "GIC0001", "status": "B", "seats": ["B4", "C5", "D4", "E5"]}
+    movie.bookings = [
+        Booking("GIC0001", "B", ["B4", "C5", "D4", "E5"])
     ]
     # Start at A5, book 15 seats (should fill right in A, then next rows by centrality, then left in A, then previous rows by centrality)
     seats = custom_seating(movie, 15, "A5")
@@ -271,10 +291,11 @@ def test_custom_seating_large_group_overflow_multiple_rows():
     assert seats == expected
 
 def test_custom_seating_full_overflow_all_rows():
+    from src.movie_classes import Booking
     movie = create_movie("Inception 3 6")
     # Book some seats in all rows
-    movie["bookings"] = [
-        {"ID": "GIC0001", "status": "B", "seats": ["A3", "B4", "C2"]}
+    movie.bookings = [
+        Booking("GIC0001", "B", ["A3", "B4", "C2"])
     ]
     # Start at B2, book 10 seats
     seats = custom_seating(movie, 10, "B2")
@@ -282,11 +303,12 @@ def test_custom_seating_full_overflow_all_rows():
     assert seats == expected
 
 def test_custom_seating_with_sparse_and_dense_bookings():
+    from src.movie_classes import Booking
     movie = create_movie("Inception 4 7")
     # Book a dense block in C, sparse in D
-    movie["bookings"] = [
-        {"ID": "GIC0001", "status": "B", "seats": ["C2", "C3", "C4", "C5", "C6"]},
-        {"ID": "GIC0002", "status": "B", "seats": ["D1", "D7"]}
+    movie.bookings = [
+        Booking("GIC0001", "B", ["C2", "C3", "C4", "C5", "C6"]),
+        Booking("GIC0002", "B", ["D1", "D7"])
     ]
     # Start at B4, book 8 seats
     seats = custom_seating(movie, 8, "B4")
@@ -296,54 +318,56 @@ def test_custom_seating_with_sparse_and_dense_bookings():
 
 ## Tests for book_ticket (end to end)
 def test_default_seating_large_group_with_blocked_row():
+    from src.movie_classes import Booking
     movie = create_movie("Inception 8 10")
     # Book B3, B4, B5, B6
-    movie["bookings"] = [
-        {"ID": "GIC0001", "status": "B", "seats": ["B3", "B4", "B5", "B6"]}
+    movie.bookings = [
+        Booking("GIC0001", "B", ["B3", "B4", "B5", "B6"])
     ]
     # New booking for 12 seats should fill all of row A and then B7, B8
     with patch.object(builtins, 'input', lambda *a, **k: ""):
         movie = book_ticket(movie, 12)
-    expected_seats = set([f"A{i}" for i in range(1, 11)] + ["B7", "B8"])
-    assigned_seats = movie["bookings"][-1]["seats"]
+    expected_seats = {f"A{i}" for i in range(1, 11)} | {"B7", "B8"}
+    assigned_seats = movie.bookings[-1].seats
     assert set(assigned_seats) == expected_seats
 
 def test_default_seating_with_sparse_bookings():
+    from src.movie_classes import Booking
     movie = create_movie("Inception 8 10")
-    movie["bookings"] = [
-        {"ID": "GIC0001", "status": "B", "seats": ["A2", "A4", "A5", "A7", "A9"]}
+    movie.bookings = [
+        Booking("GIC0001", "B", ["A2", "A4", "A5", "A7", "A9"])
     ]
     # New booking for 3 seats should get A6, A8, A3
     with patch.object(builtins, 'input', lambda *a, **k: ""):
         movie = book_ticket(movie, 3)
-    assigned_seats = movie["bookings"][-1]["seats"]
-    assert set(assigned_seats) == set(["A6", "A8", "A3"])
+    assigned_seats = movie.bookings[-1].seats
+    assert set(assigned_seats) == {"A6", "A8", "A3"}
 
 def test_book_ticket_adds_booking():
     movie = create_movie("Inception 8 10")
     # Book 2 tickets, expect a booking object to be added
     with patch.object(builtins, 'input', lambda *a, **k: ""):
         updated_movie = book_ticket(movie, 2)
-    assert len(updated_movie["bookings"]) == 1
-    booking = updated_movie["bookings"][0]
-    assert booking["ID"] == "GIC0001"
-    assert booking["status"] == "B"
-    assert len(booking["seats"]) == 2
+    assert len(updated_movie.bookings) == 1
+    booking = updated_movie.bookings[0]
+    assert booking.id == "GIC0001"
+    assert booking.status == "B"
+    assert len(booking.seats) == 2
 
 def test_default_seating_first_booking_single():
     movie = create_movie("Inception 8 10")
     with patch.object(builtins, 'input', lambda *a, **k: ""):
         movie = book_ticket(movie, 1)
-    assigned_seats = movie["bookings"][0]["seats"]
+    assigned_seats = movie.bookings[0].seats
     assert assigned_seats == ["A6"]
 
 def test_default_seating_first_booking_group():
     movie = create_movie("Inception 8 10")
     with patch.object(builtins, 'input', lambda *a, **k: ""):
         movie = book_ticket(movie, 3)
-    assigned_seats = movie["bookings"][0]["seats"]
+    assigned_seats = movie.bookings[0].seats
     # Should assign A6, A5, A7 (center rightmost, center leftmost, then rightmost)
-    assert set(assigned_seats) == set(["A6", "A5", "A7"])
+    assert set(assigned_seats) == {"A6", "A5", "A7"}
 
 def test_default_seating_with_existing_bookings():
     movie = create_movie("Inception 8 10")
@@ -352,23 +376,24 @@ def test_default_seating_with_existing_bookings():
         movie = book_ticket(movie, 1)
         # Second booking for 2 seats
         movie = book_ticket(movie, 2)
-        assigned_seats = movie["bookings"][1]["seats"]
+        assigned_seats = movie.bookings[1].seats
         # Should assign A5, A7
         assert assigned_seats == ["A5", "A7"]
 
 def test_default_seating_with_existing_random_groups():
+    from src.movie_classes import Booking
     movie = create_movie("Inception 2 6")  # Rows: A, B; Seats: 1-6
     # Existing bookings: A2, A3, A4 (middle block taken)
-    movie["bookings"] = [
-        {"ID": "GIC0001", "status": "B", "seats": ["A2", "A3", "A4"]}
+    movie.bookings = [
+        Booking("GIC0001", "B", ["A2", "A3", "A4"])
     ]
     with patch.object(builtins, 'input', lambda *a, **k: ""):
         # New booking for 2 seats should get A5, A6
         movie = book_ticket(movie, 2)
-        assert movie["bookings"][-1]["seats"] == ["A5", "A6"]
+        assert movie.bookings[-1].seats == ["A5", "A6"]
         # New booking for 2 seats should get A1 and B4
         movie = book_ticket(movie, 2)
-        assigned_seats2 = movie["bookings"][-1]["seats"]
+        assigned_seats2 = movie.bookings[-1].seats
         assert assigned_seats2 == ["A1", "B4"]  # A1, B4 are the most middle in A, B
 
 # --- Tests for custom_seating helpers ---

@@ -11,27 +11,22 @@ def book_ticket_advanced(movie_json, num_tickets):
     Uses get_booking_id to generate the next booking ID.
     Returns the modified movie JSON.
     """
-    log_info(f"[ADVANCED] Starting booking for {num_tickets} tickets for movie '{movie_json['title']}'")
-    print(f"\nSuccessfully reserved {num_tickets} {movie_json['title']} tickets")
+    from src.movie_classes import Booking
+    log_info(f"[ADVANCED] Starting booking for {num_tickets} tickets for movie '{movie_json.title}'")
+    print(f"\nSuccessfully reserved {num_tickets} {movie_json.title} tickets")
     booking_id = get_booking_id(movie_json)
     log_info(f"[ADVANCED] Generated booking ID: {booking_id}")
-    booking = {
-        "ID": booking_id,
-        "status": "R", # set as Reserved by default, will be set to B once user confirms
-        "seats": []
-    }
+    booking = Booking(booking_id, "R", [])
     # Ensure bookings is a list
-    if "bookings" not in movie_json or not isinstance(movie_json["bookings"], list):
-        log_warning("[ADVANCED] 'bookings' key missing or not a list in movie_json. Initializing new list.")
-        movie_json["bookings"] = []
-    
+    if not hasattr(movie_json, "bookings") or not isinstance(movie_json.bookings, list):
+        log_warning("[ADVANCED] 'bookings' attribute missing or not a list in movie_json. Initializing new list.")
+        movie_json.bookings = []
     # Assign seats using default_seating (now returns seat list)
     assigned_seats = default_seating_advanced(movie_json, num_tickets)
-    booking["seats"] = assigned_seats
+    booking.seats = assigned_seats
     log_info(f"[ADVANCED] Default seats assigned: {assigned_seats}")
-    
-    movie_json["bookings"].append(booking)
-    log_info(f"[ADVANCED] Booking object added to movie_json: {booking}")
+    movie_json.bookings.append(booking)
+    log_info(f"[ADVANCED] Booking object added to movie_json: {booking.__dict__}")
     while True:
         print(f"\nBooking ID: {booking_id}")
         # here we will call the display function
@@ -87,8 +82,8 @@ def default_seating_advanced(movie_json, num_tickets):
     - Skips already booked seats.
     Returns a list of assigned seat labels.
     """
-    rows = movie_json["row"]
-    seats_per_row = movie_json["seats_per_row"]
+    rows = movie_json.row
+    seats_per_row = movie_json.seats_per_row
     seat_map = build_seat_map(movie_json)
     booked = get_booked_seats(movie_json)
     seats_needed = num_tickets

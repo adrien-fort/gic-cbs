@@ -19,6 +19,7 @@ To run the application:
 	python -m src.main
 	```
 
+
 You will be guided through:
 
 - Creating a movie and seating map

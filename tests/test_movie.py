@@ -4,18 +4,14 @@ test_movie.py
 Unit tests for the movie module, covering movie creation, seat availability, and display logic.
 """
 
-from src.movie import create_movie, movie_available_seats, movie_display, build_seat_display_map
+from src.movie import create_movie, movie_available_seats, movie_display, build_seat_display_map, mark_seats_on_map
 import os
 import json
 
 def test_movie_display_basic():
+    from src.movie_classes import Booking
     movie = create_movie("Inception 8 10")
-    # Insert a reserved booking for A4, A5, A6, A7
-    movie["bookings"].append({
-        "ID": "GIC0001",
-        "status": "R",
-        "seats": ["A4", "A5", "A6", "A7"]
-    })
+    movie.bookings.append(Booking("GIC0001", "R", ["A4", "A5", "A6", "A7"]))
     output = movie_display(movie)
     expected = (
         "Selected seats:\n"
@@ -36,12 +32,9 @@ def test_movie_display_basic():
 
 
 def test_movie_display_booked():
+    from src.movie_classes import Booking
     movie = create_movie("Inception 2 4")
-    movie["bookings"].append({
-        "ID": "GIC0001",
-        "status": "B",
-        "seats": ["A1", "B3"]
-    })
+    movie.bookings.append(Booking("GIC0001", "B", ["A1", "B3"]))
     output = movie_display(movie)
     expected = (
         "Selected seats:\n"
@@ -56,17 +49,10 @@ def test_movie_display_booked():
 
 
 def test_movie_display_mixed():
+    from src.movie_classes import Booking
     movie = create_movie("Inception 2 4")
-    movie["bookings"].append({
-        "ID": "GIC0001",
-        "status": "R",
-        "seats": ["A2"]
-    })
-    movie["bookings"].append({
-        "ID": "GIC0002",
-        "status": "B",
-        "seats": ["A1", "B3"]
-    })
+    movie.bookings.append(Booking("GIC0001", "R", ["A2"]))
+    movie.bookings.append(Booking("GIC0002", "B", ["A1", "B3"]))
     output = movie_display(movie)
     expected = (
         "Selected seats:\n"
@@ -81,12 +67,9 @@ def test_movie_display_mixed():
 
 
 def test_movie_display_wide():
+    from src.movie_classes import Booking
     movie = create_movie("Inception 1 12")
-    movie["bookings"].append({
-        "ID": "GIC0001",
-        "status": "B",
-        "seats": ["A1", "A12"]
-    })
+    movie.bookings.append(Booking("GIC0001", "B", ["A1", "A12"]))
     output = movie_display(movie)
     expected = (
         "Selected seats:\n"
@@ -102,32 +85,33 @@ def test_movie_display_wide():
 def test_create_movie_basic():
     user_input = "Inception 8 10"
     movie = create_movie(user_input)
-    assert movie["title"] == "Inception"
-    assert movie["row"] == 8
-    assert movie["seats_per_row"] == 10
-    assert isinstance(movie["bookings"], list)
-    assert movie["bookings"] == []
+    assert movie.title == "Inception"
+    assert movie.row == 8
+    assert movie.seats_per_row == 10
+    assert isinstance(movie.bookings, list)
+    assert movie.bookings == []
 
 
 def test_create_movie_multiword_title():
     user_input = "Die Hard 2 16 45"
     movie = create_movie(user_input)
-    assert movie["title"] == "Die Hard 2"
-    assert movie["row"] == 16
-    assert movie["seats_per_row"] == 45
-    assert isinstance(movie["bookings"], list)
-    assert movie["bookings"] == []
+    assert movie.title == "Die Hard 2"
+    assert movie.row == 16
+    assert movie.seats_per_row == 45
+    assert isinstance(movie.bookings, list)
+    assert movie.bookings == []
 
 
 def test_create_movie_json_structure():
     user_input = "Avatar 12 50"
     movie = create_movie(user_input)
+    movie_dict = movie.to_dict()
     # Check all required keys
     for key in ["title", "row", "seats_per_row", "bookings"]:
-        assert key in movie
+        assert key in movie_dict
     # Check bookings is a list and empty
-    assert isinstance(movie["bookings"], list)
-    assert len(movie["bookings"]) == 0
+    assert isinstance(movie_dict["bookings"], list)
+    assert len(movie_dict["bookings"]) == 0
 
 
 def test_movie_available_seats_no_bookings():
@@ -136,13 +120,9 @@ def test_movie_available_seats_no_bookings():
 
 
 def test_movie_available_seats_with_bookings():
+    from src.movie_classes import Booking
     movie = create_movie("Inception 8 10")
-    # Book A6, A5, A7, A4
-    movie["bookings"].append({
-        "ID": "GIC0001",
-        "status": "B",
-        "seats": ["A6", "A5", "A7", "A4"]
-    })
+    movie.bookings.append(Booking("GIC0001", "B", ["A6", "A5", "A7", "A4"]))
     assert movie_available_seats(movie) == 76
 
 
@@ -160,14 +140,14 @@ def test_save_movie_creates_and_overwrites_file():
     assert os.path.exists(movie_file)
     with open(movie_file, 'r') as f:
         data = json.load(f)
-    assert data == movie1
+    assert data == movie1.to_dict()
 
     # Overwrite with different movie
     movie2 = create_movie("Avatar 12 50")
     save_movie(movie2)
     with open(movie_file, 'r') as f:
         data2 = json.load(f)
-    assert data2 == movie2
+    assert data2 == movie2.to_dict()
 
 
 def test_build_seat_display_map_empty():
@@ -180,12 +160,9 @@ def test_build_seat_display_map_empty():
     }
 
 def test_build_seat_display_map_reserved():
+    from src.movie_classes import Booking
     movie = create_movie("Inception 2 4")
-    movie["bookings"].append({
-        "ID": "GIC0001",
-        "status": "R",
-        "seats": ["A2", "B4"]
-    })
+    movie.bookings.append(Booking("GIC0001", "R", ["A2", "B4"]))
     seat_map = build_seat_display_map(movie)
     assert seat_map == {
         'A': ['.', 'o', '.', '.'],
@@ -193,12 +170,9 @@ def test_build_seat_display_map_reserved():
     }
 
 def test_build_seat_display_map_booked():
+    from src.movie_classes import Booking
     movie = create_movie("Inception 2 4")
-    movie["bookings"].append({
-        "ID": "GIC0001",
-        "status": "B",
-        "seats": ["A1", "B3"]
-    })
+    movie.bookings.append(Booking("GIC0001", "B", ["A1", "B3"]))
     seat_map = build_seat_display_map(movie)
     assert seat_map == {
         'A': ['#', '.', '.', '.'],
@@ -206,19 +180,41 @@ def test_build_seat_display_map_booked():
     }
 
 def test_build_seat_display_map_mixed():
+    from src.movie_classes import Booking
     movie = create_movie("Inception 2 4")
-    movie["bookings"].append({
-        "ID": "GIC0001",
-        "status": "R",
-        "seats": ["A2"]
-    })
-    movie["bookings"].append({
-        "ID": "GIC0002",
-        "status": "B",
-        "seats": ["A1", "B3"]
-    })
+    movie.bookings.append(Booking("GIC0001", "R", ["A2"]))
+    movie.bookings.append(Booking("GIC0002", "B", ["A1", "B3"]))
     seat_map = build_seat_display_map(movie)
     assert seat_map == {
         'A': ['#', 'o', '.', '.'],
         'B': ['.', '.', '#', '.']
     }
+
+def test_mark_seats_on_map_reserved():
+    seat_map = {'A': ['.'] * 5, 'B': ['.'] * 5}
+    status = 'R'
+    seats = ['A2', 'A3', 'B1']
+    mark_seats_on_map(seat_map, status, seats)
+    assert seat_map['A'] == ['.', 'o', 'o', '.', '.']
+    assert seat_map['B'] == ['o', '.', '.', '.', '.']
+
+def test_mark_seats_on_map_booked():
+    seat_map = {'A': ['.'] * 4, 'B': ['.'] * 4}
+    status = 'B'
+    seats = ['A1', 'B4']
+    mark_seats_on_map(seat_map, status, seats)
+    assert seat_map['A'] == ['#', '.', '.', '.']
+    assert seat_map['B'] == ['.', '.', '.', '#']
+
+def test_mark_seats_on_map_mixed():
+    seat_map = {'A': ['.'] * 3, 'B': ['.'] * 3}
+    mark_seats_on_map(seat_map, 'R', ['A1', 'B2'])
+    mark_seats_on_map(seat_map, 'B', ['A3', 'B1'])
+    assert seat_map['A'] == ['o', '.', '#']
+    assert seat_map['B'] == ['#', 'o', '.']
+
+def test_mark_seats_on_map_empty():
+    seat_map = {'A': ['.'] * 2}
+    mark_seats_on_map(seat_map, 'R', [])
+    mark_seats_on_map(seat_map, 'B', [])
+    assert seat_map['A'] == ['.', '.']

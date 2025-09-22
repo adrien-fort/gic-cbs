@@ -14,18 +14,17 @@ from src import logger as mylogger
 def test_log_file_creation_and_content():
     # Find the log file path as per logger.py logic
     log_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'logs'))
-    log_pattern = os.path.join(log_dir, '*.log')
-    # Remove any pre-existing log files to ensure a clean test
+    log_pattern = os.path.join(log_dir, 'pytest-*.testlog')
+    # Remove any pre-existing test log files to ensure a clean test
     for f in glob.glob(log_pattern):
         os.remove(f)
 
-
     # Reconfigure logger to ensure a FileHandler is attached for this test
     import logging
-    for handler in list(mylogger.logger.handlers):
+    for handler in mylogger.logger.handlers:
         mylogger.logger.removeHandler(handler)
 
-    test_log_file = os.path.join(log_dir, 'pytest-test.log')
+    test_log_file = os.path.join(log_dir, 'pytest-test.testlog')
     file_handler = logging.FileHandler(test_log_file)
     file_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)s] %(message)s'))
     mylogger.logger.addHandler(file_handler)
@@ -56,10 +55,10 @@ def test_log_file_creation_and_content():
 def test_log_warning_file_content():
     import logging
     log_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'logs'))
-    test_log_file = os.path.join(log_dir, 'pytest-warning.log')
+    test_log_file = os.path.join(log_dir, 'pytest-warning.testlog')
     if os.path.exists(test_log_file):
         os.remove(test_log_file)
-    for handler in list(mylogger.logger.handlers):
+    for handler in mylogger.logger.handlers:
         mylogger.logger.removeHandler(handler)
     file_handler = logging.FileHandler(test_log_file)
     file_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)s] %(message)s'))
@@ -81,10 +80,10 @@ def test_log_warning_file_content():
 def test_log_error_file_content():
     import logging
     log_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'logs'))
-    test_log_file = os.path.join(log_dir, 'pytest-error.log')
+    test_log_file = os.path.join(log_dir, 'pytest-error.testlog')
     if os.path.exists(test_log_file):
         os.remove(test_log_file)
-    for handler in list(mylogger.logger.handlers):
+    for handler in mylogger.logger.handlers:
         mylogger.logger.removeHandler(handler)
     file_handler = logging.FileHandler(test_log_file)
     file_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)s] %(message)s'))

@@ -19,6 +19,7 @@ To run the cinema booking system, activate your virtual environment and execute:
 python -m src.main
 ```
 
+
 You will be prompted to create a movie, book tickets, check bookings, and view seat availability through a simple interactive menu. All actions and errors are logged for observability.
 
 ## Pipeline

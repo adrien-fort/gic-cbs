@@ -7,13 +7,14 @@ Handles movie creation, main menu, and ticket booking flows.
 """
 
 from src import logger, movie, booking, check_booking
+from src.movie_classes import Movie
 from src.validation import movie_validation, is_positive_integer, ticket_num_validation, is_valid_booking
 
 def prompt_movie_creation():
     """
     Prompt the user to define a movie title and seating map.
     Returns:
-        dict: The created movie data.
+        Movie: The created Movie instance.
     """
     logger.log_info("Prompting user for movie title and seating map.")
     while True:
@@ -21,10 +22,10 @@ def prompt_movie_creation():
         is_valid = movie_validation(user_input)
         if is_valid:
             logger.log_info(f"Valid movie and seating map input received: {user_input}")
-            movie_data = movie.create_movie(user_input)
-            logger.log_info(f"Movie created: {movie_data}")
-            movie.save_movie(movie_data)  # Save the newly created movie
-            return movie_data
+            movie_obj = movie.create_movie(user_input)
+            logger.log_info(f"Movie created: {movie_obj}")
+            movie.save_movie(movie_obj)  # Save the newly created movie
+            return movie_obj
         else:
             logger.log_warning(f"Invalid input for movie and seating map: {user_input}. Prompting again.")
             print("Invalid input. Please try again.")
@@ -33,11 +34,11 @@ def main_menu_loop(movie_data):
     """
     Display the main menu and handle user selections for booking or checking bookings.
     Args:
-        movie_data (dict): The current movie data.
+        movie_data (Movie): The current Movie instance.
     """
     while True:
         print("\nWelcome to GIC Cinemas")
-        print("[1] Book tickets for "+ movie_data["title"] + " (" + str(movie.movie_available_seats(movie_data)) + " seats available)")
+        print(f"[1] Book tickets for {movie_data.title} (" + str(movie.movie_available_seats(movie_data)) + " seats available)")
         print("[2] Check bookings")
         print("[3] Exit")
         choice = input("Please enter your selection:\n> ")
@@ -49,7 +50,7 @@ def main_menu_loop(movie_data):
             check_booking_loop(movie_data)
         elif choice == "3":
             logger.log_info("Exiting application.")
-            print("Thank you for using GIC Cinemas system. Bye!")
+            print("\nThank you for using GIC Cinemas system. Bye!")
             break
         else:
             logger.log_warning(f"Invalid menu selection: {choice}. Prompting again.")
@@ -59,7 +60,7 @@ def booking_tickets_loop(movie_data):
     """
     Prompt the user to enter the number of tickets to book and handle booking logic.
     Args:
-        movie_data (dict): The current movie data.
+        movie_data (Movie): The current Movie instance.
     """
     while True:
         ticket_input = input("\nEnter number of tickets to book, or enter blank to go back to main menu:\n> ")
@@ -91,7 +92,7 @@ def check_booking_loop(movie_data):
     """
     Prompt the user to enter a booking ID in a loop to show the details of the booking selected.
     Args:
-        movie_data (dict): The current movie data.
+        movie_data (Movie): The current Movie instance.
     """
     while True:
         booking_id = input("\nEnter booking ID, or enter blank to go back to main menu:\n> ")
@@ -115,8 +116,8 @@ def main():
     from src import logger
     logger.log_info("GIC CBS application started.")
     print("\nWelcome to the GIC CBS application!")
-    movie_data = prompt_movie_creation()
-    main_menu_loop(movie_data)
+    movie_obj = prompt_movie_creation()
+    main_menu_loop(movie_obj)
 
 
 if __name__ == "__main__":

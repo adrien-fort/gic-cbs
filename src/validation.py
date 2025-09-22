@@ -6,24 +6,37 @@ This module contains validation functions for the GIC CBS application.
 """
 
 from src.logger import log_info, log_warning, log_error
+from src.movie import movie_available_seats
+from src.movie_classes import Movie
+
+
 
 def is_positive_integer(value):
+    """
+    Check if the given value is a positive integer.
+    Args:
+        value: The value to check.
+    Returns:
+        bool: True if value is a positive integer, False otherwise.
+    """
     log_info(f"Validating if value is positive integer: {value}")
-    """Return True if value is a positive integer, False otherwise."""
     try:
         return int(value) > 0
     except (ValueError, TypeError):
         return False
 
 def movie_validation(user_input):
-    log_info(f"Validating movie input: '{user_input}'")
     """
-    Validate input in the format: [Title] [Row] [SeatsPerRow]
+    Validate input in the format: [Title] [Row] [SeatsPerRow].
     - Title: non-empty string (can contain spaces, but must be first)
     - Row: positive integer maximum 26
     - SeatsPerRow: positive integer maximum 50
-    Returns True if valid, False otherwise.
+    Args:
+        user_input (str): The user input string.
+    Returns:
+        bool: True if valid, False otherwise.
     """
+    log_info(f"Validating movie input: '{user_input}'")
     if not isinstance(user_input, str):
         log_warning("Movie input is not a string.")
         return False
@@ -56,11 +69,17 @@ def movie_validation(user_input):
     return True
 
 def ticket_num_validation(ticket_input, movie_json):
-    log_info(f"Validating ticket number: {ticket_input}")
     """
+    Validate the ticket input for booking.
     Returns True if ticket_input is a positive integer and less than or equal to available seats in the movie.
+    Accepts only a Movie instance.
+    Args:
+        ticket_input (str): The user input for number of tickets.
+        movie_json (Movie): The Movie instance.
+    Returns:
+        bool: True if valid, False otherwise.
     """
-    from src.movie import movie_available_seats
+    log_info(f"Validating ticket number: {ticket_input}")
     try:
         num = int(ticket_input)
         if num <= 0:
@@ -69,7 +88,12 @@ def ticket_num_validation(ticket_input, movie_json):
     except (ValueError, TypeError):
         log_warning("Ticket input is not a valid integer.")
         return False
-    available = movie_available_seats(movie_json)
+    if isinstance(movie_json, Movie):
+        movie_obj = movie_json
+    else:
+        log_error("movie_json is not a Movie instance.")
+        return False
+    available = movie_available_seats(movie_obj)
     if num > available:
         log_warning(f"Requested tickets ({num}) exceed available seats ({available}).")
         return False
@@ -77,15 +101,27 @@ def ticket_num_validation(ticket_input, movie_json):
     return True
 
 def is_valid_seat(movie_json, user_input):
-    log_info(f"Validating seat input: '{user_input}'")
     """
+    Validate a seat input for booking.
     Returns 'blank' if input is blank (accept default), 'valid' if seat is valid and available, 'invalid' otherwise.
+    Accepts only a Movie instance.
+    Args:
+        movie_json (Movie): The Movie instance.
+        user_input (str): The seat input string.
+    Returns:
+        str: 'blank', 'valid', or 'invalid'.
     """
+    log_info(f"Validating seat input: '{user_input}'")
     from src.booking import build_seat_map, get_booked_seats
     if user_input.strip() == "":
         log_info("Seat input is blank (accept default)."); return "blank"
     seat_input = user_input.upper()
-    seat_map = build_seat_map(movie_json)
+    if isinstance(movie_json, Movie):
+        movie_obj = movie_json
+    else:
+        log_error("movie_json is not a Movie instance.")
+        return "invalid"
+    seat_map = build_seat_map(movie_obj)
     row = seat_input[0]
     try:
         int(seat_input[1:])
@@ -94,8 +130,8 @@ def is_valid_seat(movie_json, user_input):
     if row not in seat_map:
         log_warning(f"Row '{row}' not in seat map."); return "invalid"
     if seat_input not in seat_map[row]:
-        log_warning(f"Seat '{seat_input}' not in row '{row}'."); return "invalid"
-    booked = get_booked_seats(movie_json)
+        log_warning(f"Seat '{seat_input}' is not in row '{row}'."); return "invalid"
+    booked = get_booked_seats(movie_obj)
     if seat_input in booked:
         log_warning(f"Seat '{seat_input}' is already booked."); return "invalid"
     log_info(f"Seat '{seat_input}' is valid and available.")
@@ -103,19 +139,27 @@ def is_valid_seat(movie_json, user_input):
 
 def is_valid_booking(movie_json, booking_id):
     """
-    Returns True if booking_id exists in the movie's bookings, False otherwise.
+    Check if a booking ID exists in the movie's bookings.
     Handles invalid or non-string IDs gracefully.
+    Accepts only a Movie instance.
+    Args:
+        movie_json (Movie): The Movie instance.
+        booking_id (str): The booking ID to check.
+    Returns:
+        bool: True if booking exists, False otherwise.
     """
     log_info(f"Validating booking ID: {booking_id}")
-    if not isinstance(movie_json, dict) or "bookings" not in movie_json:
-        log_warning("movie_json is not valid or missing 'bookings'.")
-        return False
     if not isinstance(booking_id, str):
         log_warning("Booking ID is not a string.")
         return False
-    for booking in movie_json["bookings"]:
-        if booking.get("ID") == booking_id:
-            log_info(f"Booking ID '{booking_id}' found.")
-            return True
+    if isinstance(movie_json, Movie):
+        movie_obj = movie_json
+    else:
+        log_warning("movie_json is not valid for booking lookup.")
+        return False
+    booking = movie_obj.get_booking(booking_id)
+    if booking is not None:
+        log_info(f"Booking ID '{booking_id}' found.")
+        return True
     log_info(f"Booking ID '{booking_id}' not found.")
     return False

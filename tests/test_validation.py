@@ -50,17 +50,14 @@ def test_is_positive_integer():
 def test_ticket_num_validation():
     from src.validation import ticket_num_validation
     from src.movie import create_movie
+    from src.movie_classes import Booking
     # Empty cinema: Inception 8 10 (80 seats)
     movie = create_movie("Inception 8 10")
     assert ticket_num_validation("4", movie) is True
     assert ticket_num_validation("81", movie) is False
     # 6 seats already booked
     movie_with_booked = create_movie("Inception 8 10")
-    movie_with_booked["bookings"].append({
-        "ID": "GIC0001",
-        "status": "B",
-        "seats": ["A1", "A2", "A3", "A4", "A5", "A6"]
-    })
+    movie_with_booked.bookings.append(Booking("GIC0001", "B", ["A1", "A2", "A3", "A4", "A5", "A6"]))
     assert ticket_num_validation("78", movie_with_booked) is False
 
 def test_is_valid_seat_positive():
@@ -73,15 +70,17 @@ def test_is_valid_seat_positive():
 def test_is_valid_seat_reserved():
     from src.validation import is_valid_seat
     from src.movie import create_movie
+    from src.movie_classes import Booking
     movie = create_movie("Inception 8 10")
-    movie["bookings"].append({"ID": "GIC0001", "status": "R", "seats": ["A2"]})
+    movie.bookings.append(Booking("GIC0001", "R", ["A2"]))
     assert is_valid_seat(movie, "A2") == "valid"
 
 def test_is_valid_seat_booked():
     from src.validation import is_valid_seat
     from src.movie import create_movie
+    from src.movie_classes import Booking
     movie = create_movie("Inception 8 10")
-    movie["bookings"].append({"ID": "GIC0001", "status": "B", "seats": ["A2"]})
+    movie.bookings.append(Booking("GIC0001", "B", ["A2"]))
     assert is_valid_seat(movie, "A2") == "invalid"
 
 def test_is_valid_seat_nonexistent():
@@ -92,40 +91,43 @@ def test_is_valid_seat_nonexistent():
 
 def test_is_valid_booking_false_for_nonexistent():
     from src.validation import is_valid_booking
-    movie_json = {
-        "title": "Inception",
-        "row": 8,
-        "seats_per_row": 8,
-        "bookings": [
-            {"ID": "GIC0001", "status": "B", "seats": ["A1", "A2"]},
-            {"ID": "GIC0002", "status": "B", "seats": ["A3", "A4"]},
+    from src.movie_classes import Movie, Booking
+    movie = Movie(
+        "Inception",
+        8,
+        8,
+        bookings=[
+            Booking("GIC0001", "B", ["A1", "A2"]),
+            Booking("GIC0002", "B", ["A3", "A4"]),
         ]
-    }
-    assert is_valid_booking(movie_json, "GIC0003") is False
+    )
+    assert is_valid_booking(movie, "GIC0003") is False
 
 def test_is_valid_booking_true_for_existing():
     from src.validation import is_valid_booking
-    movie_json = {
-        "title": "Inception",
-        "row": 8,
-        "seats_per_row": 8,
-        "bookings": [
-            {"ID": "GIC0001", "status": "B", "seats": ["A1", "A2"]},
-            {"ID": "GIC0002", "status": "B", "seats": ["A3", "A4"]},
+    from src.movie_classes import Movie, Booking
+    movie = Movie(
+        "Inception",
+        8,
+        8,
+        bookings=[
+            Booking("GIC0001", "B", ["A1", "A2"]),
+            Booking("GIC0002", "B", ["A3", "A4"]),
         ]
-    }
-    assert is_valid_booking(movie_json, "GIC0002") is True
+    )
+    assert is_valid_booking(movie, "GIC0002") is True
 
 def test_is_valid_booking_false_for_random_inputs():
     from src.validation import is_valid_booking
-    movie_json = {
-        "title": "Inception",
-        "row": 8,
-        "seats_per_row": 8,
-        "bookings": [
-            {"ID": "GIC0001", "status": "B", "seats": ["A1", "A2"]},
-            {"ID": "GIC0002", "status": "B", "seats": ["A3", "A4"]},
+    from src.movie_classes import Movie, Booking
+    movie = Movie(
+        "Inception",
+        8,
+        8,
+        bookings=[
+            Booking("GIC0001", "B", ["A1", "A2"]),
+            Booking("GIC0002", "B", ["A3", "A4"]),
         ]
-    }
+    )
     for invalid in [None, "", "booking01", "GIC", "0001", 123, [], {}, "GIC9999"]:
-        assert is_valid_booking(movie_json, invalid) is False
+        assert is_valid_booking(movie, invalid) is False

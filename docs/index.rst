@@ -13,7 +13,9 @@ gic-cbs
    Usage
    api_reference
    tests_reference
+
    Future Improvements
+   Pipeline
    Contributing
 
 License
