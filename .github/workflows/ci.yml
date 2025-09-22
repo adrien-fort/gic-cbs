@@ -91,3 +91,63 @@ jobs:
         with:
           name: sphinx-html-docs-${{ github.run_number }}
           path: docs/_build/html
+
+  build-docker:
+    name: Build and Save Docker Image
+    runs-on: ubuntu-latest
+    needs: docs
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker image
+        run: |
+          docker build -t gic-cbs:latest .
+      - name: Save Docker image as artifact
+        run: |
+          docker save gic-cbs:latest | gzip > gic-cbs-latest.tar.gz
+      - name: Upload Docker image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-image
+          path: gic-cbs-latest.tar.gz
+
+  # terraform-apply:
+  #   name: Terraform Apply
+  #   runs-on: ubuntu-latest
+  #   needs: build-docker
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Setup Terraform
+  #       uses: hashicorp/setup-terraform@v3
+  #     - name: Terraform Init & Apply
+  #       run: |
+  #         cd infra && terraform init && terraform apply -auto-approve
+
+  # deploy-aks:
+  #   name: Deploy to AKS
+  #   runs-on: ubuntu-latest
+  #   needs: terraform-apply
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Download Docker image artifact
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: docker-image
+  #     - name: Load Docker image
+  #       run: |
+  #         gunzip -c gic-cbs-latest.tar.gz | docker load
+  #     - name: Push to Azure Container Registry
+  #       run: |
+  #         # az acr login ...
+  #         # docker tag/push ...
+  #     - name: Deploy to AKS
+  #       run: |
+  #         # kubectl apply ...
+
+  # owasp-zap:
+  #   name: OWASP ZAP Scan
+  #   runs-on: ubuntu-latest
+  #   needs: deploy-aks
+  #   steps:
+  #     - name: Run OWASP ZAP
+  #       run: |
+  #         docker run -t owasp/zap2docker-stable zap-baseline.py -t http://<your-app-url>

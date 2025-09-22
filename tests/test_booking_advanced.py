@@ -334,3 +334,36 @@ def test_find_contiguous_blocks_empty():
     available = []
     result = find_contiguous_blocks(available)
     assert result == []
+
+# Direct test for assign_single_seat_advanced (strict coverage)
+def test_assign_single_seat_advanced():
+    from src.booking_advanced import assign_single_seat_advanced
+    # Case 1: All seats free
+    rows = 2
+    seats_per_row = 4
+    seat_map = {'A': ['A1', 'A2', 'A3', 'A4'], 'B': ['B1', 'B2', 'B3', 'B4']}
+    booked = set()
+    assigned = []
+    result = assign_single_seat_advanced(rows, seat_map, booked, assigned, seats_per_row)
+    # Should pick the most central/rightmost seat (A3 or A2 for 4 seats, rightmost is A3)
+    assert result == ['A3']
+
+    # Case 2: Some seats booked/assigned
+    booked = {'A3', 'A2', 'A4', 'B2', 'B3', 'B4'}
+    assigned = []
+    result = assign_single_seat_advanced(rows, seat_map, booked, assigned, seats_per_row)
+    # Only A1 and B1 are free, row A takes priority so A1 is chosen
+    assert result == ['A1']
+
+    # Case 3: All seats booked/assigned
+    booked = {'A1', 'A2', 'A3', 'A4', 'B1', 'B2', 'B3', 'B4'}
+    assigned = []
+    result = assign_single_seat_advanced(rows, seat_map, booked, assigned, seats_per_row)
+    assert result == []
+
+    # Case 4: Some seats already assigned (not booked)
+    booked = set()
+    assigned = ['A2', 'A3', 'A4', 'B1', 'B2', 'B3', 'B4']
+    result = assign_single_seat_advanced(rows, seat_map, booked, assigned, seats_per_row)
+    # Only A1 is free
+    assert result == ['A1']

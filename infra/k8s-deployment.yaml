@@ -1,0 +1,36 @@
+# Example Kubernetes deployment manifest for your app
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gic-cbs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gic-cbs
+  template:
+    metadata:
+      labels:
+        app: gic-cbs
+    spec:
+      containers:
+      - name: gic-cbs
+        image: <your-acr-name>.azurecr.io/gic-cbs:latest
+        ports:
+        - containerPort: 7681
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gic-cbs-service
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 7681
+  selector:
+    app: gic-cbs
