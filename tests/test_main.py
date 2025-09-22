@@ -163,7 +163,7 @@ def test_booking_tickets_loop_exit_immediately(monkeypatch, capsys):
     from src.movie_classes import Movie
     movie_obj = Movie("Inception", 2, 2)
     monkeypatch.setattr("builtins.input", lambda _: "")
-    main_module.booking_tickets_loop(movie_obj)
+    main_module.booking_tickets_loop(movie_obj, mode="standard")
     captured = capsys.readouterr()
     # Should produce no output when exiting immediately
     assert captured.out == ""
@@ -174,7 +174,7 @@ def test_booking_tickets_loop_invalid_input(monkeypatch, capsys):
     movie_obj = Movie("Inception", 2, 2)
     inputs = iter(["notanumber", ""])  # invalid, then exit
     monkeypatch.setattr("builtins.input", lambda _: next(inputs))
-    main_module.booking_tickets_loop(movie_obj)
+    main_module.booking_tickets_loop(movie_obj, mode="standard")
     captured = capsys.readouterr()
     assert "Invalid input. Please enter a valid number of tickets or blank to go back." in captured.out
 
@@ -184,7 +184,7 @@ def test_booking_tickets_loop_too_many_plural(monkeypatch, capsys):
     movie_obj = Movie("Inception", 2, 2)
     inputs = iter(["5", ""])  # too many, then exit
     monkeypatch.setattr("builtins.input", lambda _: next(inputs))
-    main_module.booking_tickets_loop(movie_obj)
+    main_module.booking_tickets_loop(movie_obj, mode="standard")
     captured = capsys.readouterr()
     assert "Sorry, there are only 4 seats available." in captured.out
 
@@ -194,7 +194,7 @@ def test_booking_tickets_loop_too_many_singular(monkeypatch, capsys):
     movie_obj = Movie("Inception", 1, 1)
     inputs = iter(["2", ""])  # too many, then exit
     monkeypatch.setattr("builtins.input", lambda _: next(inputs))
-    main_module.booking_tickets_loop(movie_obj)
+    main_module.booking_tickets_loop(movie_obj, mode="standard")
     captured = capsys.readouterr()
     assert "Sorry, there is only 1 seat available." in captured.out
 
@@ -204,7 +204,7 @@ def test_booking_tickets_loop_valid(monkeypatch, capsys):
     movie_obj = Movie("Inception", 2, 2)
     inputs = iter(["2", ""])  # valid booking, then auto-confirm
     monkeypatch.setattr("builtins.input", lambda _: next(inputs))
-    main_module.booking_tickets_loop(movie_obj)
+    main_module.booking_tickets_loop(movie_obj, mode="standard")
     captured = capsys.readouterr()
     # Booking now succeeds, so just check for successful reservation message
     assert "Successfully reserved 2 Inception tickets" in captured.out

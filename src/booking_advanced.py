@@ -2,44 +2,62 @@ from src.logger import log_info, log_warning, log_error
 from src.booking import get_booking_id, confirm_reservation, get_row_center, seat_sort_order, build_seat_map, get_booked_seats
 import string
 
+from src.movie_classes import Movie
+
 # All functions below are hidden from users and are an attempt at a smarter seating algorithm
 # The main driver being that a person is unlikely to want to sit in non-contiguous seats if they are booking multiple tickets
 
-def book_ticket_advanced(movie_json, num_tickets):
+def book_ticket_advanced(movie: Movie, num_tickets):
     """
     Adds a booking to the movie's bookings array.
     Uses get_booking_id to generate the next booking ID.
     Returns the modified movie JSON.
     """
     from src.movie_classes import Booking
-    log_info(f"[ADVANCED] Starting booking for {num_tickets} tickets for movie '{movie_json.title}'")
-    print(f"\nSuccessfully reserved {num_tickets} {movie_json.title} tickets")
-    booking_id = get_booking_id(movie_json)
+    from src.movie import save_movie, movie_display
+    from src.validation import is_valid_seat
+
+    log_info(f"[ADVANCED] Starting booking for {num_tickets} tickets for movie '{movie.title}'")
+    booking_id = get_booking_id(movie)
     log_info(f"[ADVANCED] Generated booking ID: {booking_id}")
     booking = Booking(booking_id, "R", [])
     # Ensure bookings is a list
-    if not hasattr(movie_json, "bookings") or not isinstance(movie_json.bookings, list):
-        log_warning("[ADVANCED] 'bookings' attribute missing or not a list in movie_json. Initializing new list.")
-        movie_json.bookings = []
-    # Assign seats using default_seating (now returns seat list)
-    assigned_seats = default_seating_advanced(movie_json, num_tickets)
+    if not hasattr(movie, "bookings") or not isinstance(movie.bookings, list):
+        log_warning("[ADVANCED] 'bookings' attribute missing or not a list in movie. Initializing new list.")
+        movie.bookings = []
+    # Assign seats using default_seating_advanced (returns seat list)
+    assigned_seats = default_seating_advanced(movie, num_tickets)
     booking.seats = assigned_seats
     log_info(f"[ADVANCED] Default seats assigned: {assigned_seats}")
-    movie_json.bookings.append(booking)
-    log_info(f"[ADVANCED] Booking object added to movie_json: {booking.__dict__}")
+    movie.bookings.append(booking)
+    log_info(f"[ADVANCED] Booking object added to movie: {booking.__dict__}")
+    print(f"\nSuccessfully reserved {num_tickets} {movie.title} tickets")
     while True:
         print(f"\nBooking ID: {booking_id}")
-        # here we will call the display function
-        seating_input = input("\nEnter blank to accept seat selection, or enter new seating position:\n")
-        if seating_input.strip() == "":
+        print(movie_display(movie.to_dict()))
+        seating_input = input("\nEnter blank to accept seat selection, or enter new seating position:\n> ")
+        status = is_valid_seat(movie, seating_input)
+        if status == "blank":
             log_info(f"[ADVANCED] Booking {booking_id} confirmed by user.")
-            movie_json = confirm_reservation(movie_json, booking_id)
+            movie = confirm_reservation(movie, booking_id)
             log_info(f"[ADVANCED] Booking {booking_id} status set to 'B'.")
+            save_movie(movie.to_dict())
+            print(f"\nBooking ID: {booking_id} confirmed.\n")
             break
+        elif status == "valid":
+            assigned_seats = advanced_custom_seating(movie, num_tickets, seating_input.strip().upper())  # Placeholder, to be implemented
+            log_info(f"[ADVANCED] Custom seating input '{seating_input.strip().upper()}' accepted. Seats assigned: {assigned_seats}")
+            b = None
+            if hasattr(movie, 'get_booking'):
+                b = movie.get_booking(booking_id)
+            if b:
+                b.seats = assigned_seats
+            save_movie(movie.to_dict())
+            log_info(f"[ADVANCED] Booking {booking_id} updated with custom seats and saved.")
         else:
-            log_warning(f"[ADVANCED] Seat selection modification not implemented. User input: '{seating_input.strip()}'")
-            print("Seat selection modification not yet implemented. Please enter blank to accept.")
-    return movie_json
+            log_warning(f"[ADVANCED] Invalid seat input '{seating_input.strip()}'; prompt user again.")
+            print(f"Seat {seating_input.strip()} is not valid. Please try again or enter blank to accept.")
+    return movie
 
 def block_center(block, seats_per_row):
     log_info(f"[ADVANCED] Calculating block center for block: {block}")
@@ -96,19 +114,7 @@ def default_seating_advanced(movie_json, num_tickets):
         return assigned  # Always prefer a single contiguous block if possible
     # 2. If not enough contiguous seats, assign seats row by row (front to back), picking most central/rightmost in each row
     if num_tickets == 1:
-        # For a single seat, always pick the most central/rightmost seat using seat_sort_order
-        all_available = []
-        for i in range(rows):
-            row_letter = string.ascii_uppercase[i]
-            for s in seat_map[row_letter]:
-                if s not in booked and s not in assigned:
-                    all_available.append(s)
-        if not all_available:
-            return assigned
-        sorted_seats = seat_sort_order(all_available, seats_per_row, take=1)
-        if sorted_seats:
-            assigned.append(sorted_seats[0])
-        return assigned
+        return assign_single_seat_advanced(rows, seat_map, booked, assigned, seats_per_row)
     for i in range(rows):
         if seats_needed <= 0:
             break
@@ -166,3 +172,134 @@ def _find_first_row_with_block(rows, seat_map, booked, assigned, seats_per_row, 
             return best_block
     return None
 
+def assign_single_seat_advanced(rows, seat_map, booked, assigned, seats_per_row):
+    """
+    Assign the most central/rightmost available seat for a single ticket booking.
+    Returns a list with the assigned seat or empty if none available.
+    """
+    all_available = []
+    for i in range(rows):
+        row_letter = string.ascii_uppercase[i]
+        for s in seat_map[row_letter]:
+            if s not in booked and s not in assigned:
+                all_available.append(s)
+    if not all_available:
+        return []
+    sorted_seats = seat_sort_order(all_available, seats_per_row, take=1)
+    if sorted_seats:
+        return [sorted_seats[0]]
+    return []
+
+def assign_from_starting_seat(seat_map, booked, row, start_num, num_tickets):
+    """Assign as many contiguous seats as possible in the starting row from the input seat."""
+    available_in_row = [s for s in seat_map[row] if s not in booked]
+    blocks = find_contiguous_blocks(available_in_row)
+    block_with_input = None
+    for block in blocks:
+        if f"{row}{start_num}" in block:
+            block_with_input = block
+            break
+    if block_with_input:
+        seat_nums = [int(s[1:]) for s in block_with_input]
+        seat_nums.sort()
+        idx = seat_nums.index(start_num)
+        seats_order = [start_num]
+        r, l = 1, 0
+        while len(seats_order) < len(seat_nums):
+            if idx + r < len(seat_nums):
+                seats_order.append(seat_nums[idx + r])
+                r += 1
+            if idx - l - 1 >= 0:
+                seats_order.append(seat_nums[idx - l - 1])
+                l += 1
+        seats_order = seats_order[:min(num_tickets, len(seat_nums))]
+        return [f"{row}{n}" for n in sorted(seats_order)]
+    else:
+        return [f"{row}{start_num}"]
+
+def find_best_subblock(blocks, seats_needed, seats_per_row):
+    """Find the most central sub-block of the required size among all blocks."""
+    best_subblock = None
+    best_score = None
+    for block in blocks:
+        if len(block) >= seats_needed:
+            nums = [int(s[1:]) for s in block]
+            for i in range(len(nums) - seats_needed + 1):
+                sub_nums = nums[i:i+seats_needed]
+                subblock = [f"{block[0][0]}{n}" for n in sub_nums]
+                center = (seats_per_row + 1) / 2
+                block_center = sum(sub_nums) / len(sub_nums)
+                score = (abs(block_center - center), -max(sub_nums))
+                if best_score is None or score < best_score:
+                    best_score = score
+                    best_subblock = subblock
+    return best_subblock
+
+def assign_overflow_rows(seat_map, booked, assigned, row_letters, row_idx, seats_needed, seats_per_row):
+    """Assign seats in overflow rows, prioritizing largest/most central contiguous blocks."""
+    for next_row_idx in range(row_idx + 1, len(row_letters)):
+        if seats_needed <= 0:
+            break
+        next_row = row_letters[next_row_idx]
+        available_in_next_row = [s for s in seat_map[next_row] if s not in booked and s not in assigned]
+        if not available_in_next_row:
+            continue
+        blocks = find_contiguous_blocks(available_in_next_row)
+        best_subblock = find_best_subblock(blocks, seats_needed, seats_per_row)
+        if best_subblock:
+            assigned.extend(best_subblock)
+            seats_needed = 0
+        else:
+            # If no block is big enough, take the largest (most central) block, then continue
+            if blocks:
+                def block_score(block):
+                    nums = [int(s[1:]) for s in block]
+                    center = (seats_per_row + 1) / 2
+                    block_center = sum(nums) / len(nums)
+                    return (-len(block), abs(block_center - center), -max(nums))
+                best_block = min(blocks, key=block_score)
+                take = min(seats_needed, len(best_block))
+                assigned.extend(best_block[:take])
+                seats_needed -= take
+    return assigned, seats_needed
+
+def assign_fallback_seats(seat_map, booked, assigned, row_letters, seats_needed):
+    """Assign any available seats (non-contiguous fallback)."""
+    all_available = []
+    for r in row_letters:
+        for s in seat_map[r]:
+            if s not in booked and s not in assigned:
+                all_available.append(s)
+    assigned.extend(all_available[:seats_needed])
+    return assigned
+
+def advanced_custom_seating(movie, num_tickets, seat_input):
+    """
+    Assign seats for advanced custom seating:
+    - Start from the user-input seat.
+    - Prioritize contiguous block in the same row (rightmost in tie).
+    - If not enough, overflow to next row, maintaining contiguity.
+    - Centrality is secondary to contiguity.
+    Returns a list of assigned seat labels.
+    """
+    import string
+    seat_map = build_seat_map(movie)
+    booked = get_booked_seats(movie)
+    row = seat_input[0]
+    start_num = int(seat_input[1:])
+    seats_per_row = movie.seats_per_row
+    row_letters = list(seat_map.keys())
+    row_idx = row_letters.index(row)
+
+    # 1. Assign as much as possible contiguously in the same row, starting at the input seat
+    assigned = assign_from_starting_seat(seat_map, booked, row, start_num, num_tickets)
+    seats_needed = num_tickets - len(assigned)
+
+    # 2. Try to fill next rows, prioritizing largest contiguous block (then centrality of block)
+    if seats_needed > 0:
+        assigned, seats_needed = assign_overflow_rows(seat_map, booked, assigned, row_letters, row_idx, seats_needed, seats_per_row)
+
+    # 3. Fallback: if still not enough, fill with any available seat (non-contiguous)
+    if seats_needed > 0:
+        assigned = assign_fallback_seats(seat_map, booked, assigned, row_letters, seats_needed)
+    return assigned
