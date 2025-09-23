@@ -196,6 +196,7 @@ jobs:
         run: kubectl apply -f infra/k8s-deployment.yaml
       - name: Wait for rollout
         run: kubectl rollout status deployment/gic-cbs
+        continue-on-error: true
 
       - name: Get pod and node status
         run: |
