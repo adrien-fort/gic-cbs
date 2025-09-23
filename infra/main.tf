@@ -3,6 +3,7 @@
 
 provider "azurerm" {
   features {}
+  use_oidc = false
 }
 
 resource "azurerm_resource_group" "gic_cbs" {
@@ -27,5 +28,30 @@ resource "azurerm_kubernetes_cluster" "gic_cbs_aks" {
   }
 }
 
-# You would also need to add Azure Container Registry, role assignments, and output values for kubeconfig, etc.
+resource "azurerm_container_registry" "gic_cbs_acr" {
+  name                = "giccbsacr${random_string.suffix.result}"
+  resource_group_name = azurerm_resource_group.gic_cbs.name
+  location            = azurerm_resource_group.gic_cbs.location
+  sku                 = "Basic"
+  admin_enabled       = true
+}
+
+resource "random_string" "suffix" {
+  length  = 6
+  upper   = false
+  special = false
+}
+
+output "acr_login_server" {
+  value = azurerm_container_registry.gic_cbs_acr.login_server
+}
+output "acr_admin_username" {
+  value = azurerm_container_registry.gic_cbs_acr.admin_username
+}
+output "acr_admin_password" {
+  value     = azurerm_container_registry.gic_cbs_acr.admin_password
+  sensitive = true
+}
+
+# You would also need to add role assignments, and output values for kubeconfig, etc.
 # See Azure Terraform docs for full production setup.
