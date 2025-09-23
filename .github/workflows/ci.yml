@@ -1,4 +1,3 @@
-
 name: CI
 
 on:
@@ -8,6 +7,7 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   test:
@@ -197,6 +197,21 @@ jobs:
       - name: Wait for rollout
         run: kubectl rollout status deployment/gic-cbs
 
+      - name: Get pod and node status
+        run: |
+          kubectl get pods -o wide
+          kubectl describe nodes
+
+      - name: Describe failing pod (if any)
+        run: |
+          FAILING_POD=$(kubectl get pods --field-selector=status.phase!=Running -o jsonpath='{.items[0].metadata.name}')
+          if [ -n "$FAILING_POD" ]; then
+            kubectl describe pod $FAILING_POD
+            kubectl logs $FAILING_POD || true
+          else
+            echo "All pods are running."
+          fi
+
   owasp-zap:
     name: OWASP ZAP Scan
     runs-on: ubuntu-latest
@@ -217,3 +232,26 @@ jobs:
       - name: Run OWASP ZAP
         run: |
           docker run -t owasp/zap2docker-stable zap-baseline.py -t ${{ env.APP_URL }}
+
+  rollback-aks:
+    name: Rollback AKS Deployment
+    runs-on: ubuntu-latest
+    needs: []
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Get AKS credentials
+        run: |
+          az aks get-credentials --resource-group gic-cbs-rg --name gic-cbs-aks --overwrite-existing
+      - name: Rollback deployment
+        run: |
+          kubectl rollout undo deployment/gic-cbs
+      - name: Show rollout history
+        run: |
+          kubectl rollout history deployment/gic-cbs
