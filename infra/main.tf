@@ -3,7 +3,6 @@
 
 provider "azurerm" {
   features {}
-  use_oidc = false
 }
 
 resource "azurerm_resource_group" "gic_cbs" {
