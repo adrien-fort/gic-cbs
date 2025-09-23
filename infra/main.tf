@@ -7,7 +7,7 @@ provider "azurerm" {
 
 resource "azurerm_resource_group" "gic_cbs" {
   name     = "gic-cbs-rg"
-  location = "East US"
+  location = "southeastasia"
 }
 
 resource "azurerm_kubernetes_cluster" "gic_cbs_aks" {
@@ -28,18 +28,14 @@ resource "azurerm_kubernetes_cluster" "gic_cbs_aks" {
 }
 
 resource "azurerm_container_registry" "gic_cbs_acr" {
-  name                = "giccbsacr${random_string.suffix.result}"
+  name                = "giccbsacrmain"
   resource_group_name = azurerm_resource_group.gic_cbs.name
   location            = azurerm_resource_group.gic_cbs.location
   sku                 = "Basic"
   admin_enabled       = true
 }
 
-resource "random_string" "suffix" {
-  length  = 6
-  upper   = false
-  special = false
-}
+
 
 output "acr_login_server" {
   value = azurerm_container_registry.gic_cbs_acr.login_server

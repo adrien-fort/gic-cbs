@@ -178,7 +178,7 @@ jobs:
           gunzip -c gic-cbs-${{ github.run_number }}.tar.gz | docker load
       - name: Push to Azure Container Registry
         run: |
-          ACR_NAME=$(az acr list --resource-group gic-cbs-rg --query "[0].name" -o tsv)
+          ACR_NAME=giccbsacrmain
           az acr login --name $ACR_NAME
           ACR_LOGIN_SERVER=$(az acr show --name $ACR_NAME --query "loginServer" -o tsv)
           docker tag gic-cbs:${{ github.run_number }} $ACR_LOGIN_SERVER/gic-cbs:${{ github.run_number }}
@@ -188,7 +188,7 @@ jobs:
           az aks get-credentials --resource-group gic-cbs-rg --name gic-cbs-aks --overwrite-existing
       - name: Update image in manifest
         run: |
-          ACR_NAME=$(az acr list --resource-group gic-cbs-rg --query "[0].name" -o tsv)
+          ACR_NAME=giccbsacrmain
           ACR_LOGIN_SERVER=$(az acr show --name $ACR_NAME --query "loginServer" -o tsv)
           sed -i "s|<your-acr-name>.azurecr.io|$ACR_LOGIN_SERVER|g" infra/k8s-deployment.yaml
           sed -i "s|:latest|:${{ github.run_number }}|g" infra/k8s-deployment.yaml
