@@ -1,3 +1,4 @@
+
 """
 test_main.py
 -----------
@@ -208,3 +209,14 @@ def test_booking_tickets_loop_valid(monkeypatch, capsys):
     captured = capsys.readouterr()
     # Booking now succeeds, so just check for successful reservation message
     assert "Successfully reserved 2 Inception tickets" in captured.out
+
+def test_check_booking_loop_no_bookings(monkeypatch, capsys):
+    from src import main as main_module
+    from src.movie_classes import Movie
+    movie_obj = Movie("Inception", 2, 2)  # No bookings
+    # Should not prompt for input, just print the message and return
+    main_module.check_booking_loop(movie_obj)
+    captured = capsys.readouterr()
+    assert "There are currently no bookings." in captured.out
+    # Should not prompt for booking ID
+    assert "Enter booking ID" not in captured.out

@@ -115,7 +115,7 @@ def is_valid_seat(movie_json, user_input):
     from src.booking import build_seat_map, get_booked_seats
     if user_input.strip() == "":
         log_info("Seat input is blank (accept default)."); return "blank"
-    seat_input = user_input.upper()
+    seat_input = user_input.strip().upper()
     if isinstance(movie_json, Movie):
         movie_obj = movie_json
     else:
@@ -152,14 +152,17 @@ def is_valid_booking(movie_json, booking_id):
     if not isinstance(booking_id, str):
         log_warning("Booking ID is not a string.")
         return False
+    booking_id = booking_id.strip().upper()
     if isinstance(movie_json, Movie):
         movie_obj = movie_json
     else:
         log_warning("movie_json is not valid for booking lookup.")
         return False
-    booking = movie_obj.get_booking(booking_id)
-    if booking is not None:
-        log_info(f"Booking ID '{booking_id}' found.")
-        return True
+    # Case-insensitive booking ID check
+    for b in getattr(movie_obj, 'bookings', []):
+        if hasattr(b, 'id') and isinstance(b.id, str):
+            if b.id.upper() == booking_id:
+                log_info(f"Booking ID '{booking_id}' found (case-insensitive match).")
+                return True
     log_info(f"Booking ID '{booking_id}' not found.")
     return False

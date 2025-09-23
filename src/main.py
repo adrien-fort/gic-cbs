@@ -105,6 +105,8 @@ def print_seat_availability_warning(available):
     """
     if available == 1:
         print("Sorry, there is only 1 seat available.")
+    elif available == 0:
+        print("Sorry, there are no seats available.")
     else:
         print(f"Sorry, there are only {available} seats available.")
 
@@ -114,6 +116,11 @@ def check_booking_loop(movie_data):
     Args:
         movie_data (Movie): The current Movie instance.
     """
+    # Check if there are any bookings in the movie
+    if not movie_data.bookings:
+        print("There are currently no bookings.")
+        logger.log_info("No bookings found in movie. Returning to main menu.")
+        return
     while True:
         booking_id = input("\nEnter booking ID, or enter blank to go back to main menu:\n> ")
         if booking_id.strip() == "":

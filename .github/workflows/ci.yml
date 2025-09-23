@@ -186,23 +186,16 @@ jobs:
       - name: Get AKS credentials
         run: |
           az aks get-credentials --resource-group gic-cbs-rg --name gic-cbs-aks --overwrite-existing
-      - name: Deploy to AKS
+      - name: Update image in manifest
         run: |
           ACR_NAME=$(az acr list --resource-group gic-cbs-rg --query "[0].name" -o tsv)
           ACR_LOGIN_SERVER=$(az acr show --name $ACR_NAME --query "loginServer" -o tsv)
-          
-          # Check if deployment exists
-          if kubectl get deployment gic-cbs > /dev/null 2>&1; then
-            echo "Deployment exists, updating image..."
-            kubectl set image deployment/gic-cbs gic-cbs=$ACR_LOGIN_SERVER/gic-cbs:${{ github.run_number }}
-            kubectl rollout status deployment/gic-cbs
-          else
-            echo "Deployment doesn't exist, creating initial deployment..."
-            kubectl create deployment gic-cbs --image=$ACR_LOGIN_SERVER/gic-cbs:${{ github.run_number }}
-            kubectl expose deployment gic-cbs --port=80 --target-port=5000 --type=LoadBalancer
-            echo "Waiting for deployment to be ready..."
-            kubectl rollout status deployment/gic-cbs
-          fi
+          sed -i "s|<your-acr-name>.azurecr.io|$ACR_LOGIN_SERVER|g" infra/k8s-deployment.yaml
+          sed -i "s|:latest|:${{ github.run_number }}|g" infra/k8s-deployment.yaml
+      - name: Apply Kubernetes manifests
+        run: kubectl apply -f infra/k8s-deployment.yaml
+      - name: Wait for rollout
+        run: kubectl rollout status deployment/gic-cbs
 
   owasp-zap:
     name: OWASP ZAP Scan
