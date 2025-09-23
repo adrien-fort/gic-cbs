@@ -183,6 +183,9 @@ jobs:
           ACR_LOGIN_SERVER=$(az acr show --name $ACR_NAME --query "loginServer" -o tsv)
           docker tag gic-cbs:${{ github.run_number }} $ACR_LOGIN_SERVER/gic-cbs:${{ github.run_number }}
           docker push $ACR_LOGIN_SERVER/gic-cbs:${{ github.run_number }}
+      - name: Get AKS credentials
+        run: |
+          az aks get-credentials --resource-group gic-cbs-rg --name gic-cbs-aks --overwrite-existing
       - name: Deploy to AKS
         run: |
           ACR_NAME=$(az acr list --resource-group gic-cbs-rg --query "[0].name" -o tsv)
