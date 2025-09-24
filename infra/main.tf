@@ -2,7 +2,11 @@
 # You will need to fill in Azure credentials, resource group, and other details.
 
 provider "azurerm" {
-  features {}
+  features {
+    resource_group {
+      prevent_deletion_if_contains_resources = false
+    }
+  }
 }
 
 resource "azurerm_resource_group" "gic_cbs" {
