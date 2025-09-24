@@ -157,11 +157,11 @@ jobs:
           fi
 
           # Import existing ACR if needed
-          if az acr show --name giccbsacrmain --resource-group gic-cbs-rg --query id -o tsv >/dev/null 2>&1; then
+          if az acr show --name giccbsacrforta20250924 --resource-group gic-cbs-rg --query id -o tsv >/dev/null 2>&1; then
             echo "ACR exists in Azure, checking Terraform state..."
             if ! terraform state list | grep -q azurerm_container_registry.gic_cbs_acr; then
               echo "Importing existing ACR into Terraform state..."
-              terraform import azurerm_container_registry.gic_cbs_acr /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/gic-cbs-rg/providers/Microsoft.ContainerRegistry/registries/giccbsacrmain || echo "Import may have failed, continuing..."
+              terraform import azurerm_container_registry.gic_cbs_acr /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/gic-cbs-rg/providers/Microsoft.ContainerRegistry/registries/giccbsacrforta20250924 || echo "Import may have failed, continuing..."
             else
               echo "ACR already managed by Terraform"
             fi
@@ -191,7 +191,7 @@ jobs:
           gunzip -c gic-cbs-${{ github.run_number }}.tar.gz | docker load
       - name: Push to Azure Container Registry
         run: |
-          ACR_NAME=giccbsacrmain
+          ACR_NAME=giccbsacrforta20250924
           az acr login --name $ACR_NAME
           ACR_LOGIN_SERVER=$(az acr show --name $ACR_NAME --query "loginServer" -o tsv)
           docker tag gic-cbs:${{ github.run_number }} $ACR_LOGIN_SERVER/gic-cbs:${{ github.run_number }}
@@ -201,7 +201,7 @@ jobs:
           az aks get-credentials --resource-group gic-cbs-rg --name gic-cbs-aks --overwrite-existing
       - name: Update image in manifest
         run: |
-          ACR_NAME=giccbsacrmain
+          ACR_NAME=giccbsacrforta20250924
           ACR_LOGIN_SERVER=$(az acr show --name $ACR_NAME --query "loginServer" -o tsv)
           sed -i "s|<your-acr-name>.azurecr.io|$ACR_LOGIN_SERVER|g" infra/k8s-deployment.yaml
           sed -i "s|:latest|:${{ github.run_number }}|g" infra/k8s-deployment.yaml
