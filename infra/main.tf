@@ -32,7 +32,7 @@ resource "azurerm_kubernetes_cluster" "gic_cbs_aks" {
 }
 
 resource "azurerm_container_registry" "gic_cbs_acr" {
-  name                = "giccbsacrmain"
+  name                = "giccbsacrforta20250924"
   resource_group_name = azurerm_resource_group.gic_cbs.name
   location            = azurerm_resource_group.gic_cbs.location
   sku                 = "Basic"
