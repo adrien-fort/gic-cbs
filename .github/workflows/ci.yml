@@ -205,13 +205,15 @@ jobs:
 
       - name: Describe failing pod (if any)
         run: |
-          FAILING_POD=$(kubectl get pods --field-selector=status.phase!=Running -o jsonpath='{.items[0].metadata.name}')
-          if [ -n "$FAILING_POD" ]; then
-            kubectl describe pod $FAILING_POD
-            kubectl logs $FAILING_POD || true
-          else
+          FAILING_PODS=$(kubectl get pods --field-selector=status.phase!=Running -o jsonpath='{.items[*].metadata.name}')
+          if [ -z "$FAILING_PODS" ]; then
             echo "All pods are running."
+            exit 0
           fi
+          for POD in $FAILING_PODS; do
+            kubectl describe pod $POD
+            kubectl logs $POD || true
+          done
 
   owasp-zap:
     name: OWASP ZAP Scan
