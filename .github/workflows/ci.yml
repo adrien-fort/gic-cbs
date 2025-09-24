@@ -129,11 +129,10 @@ jobs:
         run: |
           cd infra
           terraform init
-          
-          # Check if resource group exists in Azure
+
+          # Import existing resource group if needed
           if az group show --name gic-cbs-rg --query id -o tsv >/dev/null 2>&1; then
             echo "Resource group exists in Azure, checking Terraform state..."
-            # Check if already in Terraform state
             if ! terraform state list | grep -q azurerm_resource_group.gic_cbs; then
               echo "Importing existing resource group into Terraform state..."
               terraform import azurerm_resource_group.gic_cbs /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/gic-cbs-rg || echo "Import may have failed, continuing..."
@@ -143,7 +142,8 @@ jobs:
           else
             echo "Resource group does not exist in Azure, Terraform will create it"
           fi
-          # Check if AKS cluster exists in Azure
+
+          # Import existing AKS cluster if needed
           if az aks show --resource-group gic-cbs-rg --name gic-cbs-aks --query id -o tsv >/dev/null 2>&1; then
             echo "AKS cluster exists in Azure, checking Terraform state..."
             if ! terraform state list | grep -q azurerm_kubernetes_cluster.gic_cbs_aks; then
@@ -155,7 +155,20 @@ jobs:
           else
             echo "AKS cluster does not exist in Azure, Terraform will create it"
           fi
-          
+
+          # Import existing ACR if needed
+          if az acr show --name giccbsacrmain --resource-group gic-cbs-rg --query id -o tsv >/dev/null 2>&1; then
+            echo "ACR exists in Azure, checking Terraform state..."
+            if ! terraform state list | grep -q azurerm_container_registry.gic_cbs_acr; then
+              echo "Importing existing ACR into Terraform state..."
+              terraform import azurerm_container_registry.gic_cbs_acr /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/gic-cbs-rg/providers/Microsoft.ContainerRegistry/registries/giccbsacrmain || echo "Import may have failed, continuing..."
+            else
+              echo "ACR already managed by Terraform"
+            fi
+          else
+            echo "ACR does not exist in Azure, Terraform will create it"
+          fi
+
           terraform plan -no-color
           terraform apply -auto-approve
 
