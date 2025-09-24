@@ -240,6 +240,8 @@ jobs:
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Get AKS credentials
+        run: az aks get-credentials --resource-group gic-cbs-rg --name gic-cbs-aks --overwrite-existing
       - name: Get AKS app public IP
         id: get_ip
         run: |
