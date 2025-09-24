@@ -22,8 +22,6 @@ python -m src.main
 
 You will be prompted to create a movie, book tickets, check bookings, and view seat availability through a simple interactive menu. All actions and errors are logged for observability.
 
-## Pipeline
-The basic pipeline will run the tests, create a coverage artifact, run the sonarqube static scan (and use the artifact) and ultimately run Sphinx to create the versioned documentation with the doc artifact published.
 
 ## Running Tests
 This project uses `pytest` for testing. To run the tests, execute the following command in your Python virtual env:
@@ -45,7 +43,35 @@ make html
 
 The generated documentation will be available in the `_build/html` directory or as menntioned above the documentation is also auto-generated each time the CI pipeline runs.
 
+## Pipeline & Deployment
 
+This project uses GitHub Actions for CI/CD, deploying to Azure Kubernetes Service (AKS) with a secure, globally unique Azure Container Registry (ACR). The pipeline includes:
+
+- Automated testing and coverage reporting
+- SonarQube static analysis
+- Sphinx documentation build and artifact upload
+- Docker image build and push to ACR
+- Terraform provisioning of AKS and ACR in Singapore
+- Kubernetes manifest apply and rollout diagnostics
+- OWASP ZAP security scan against the deployed service
+- Manual rollback job for safe deployment recovery
+
+### AKS Deployment Access
+After a successful deploy, access the app via the public IP of the AKS service:
+
+```
+kubectl get svc gic-cbs --namespace default -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
+```
+Visit: `http://<AKS_PUBLIC_IP>`
+
+### Troubleshooting
+- If image pull fails, ensure AKS is attached to the correct ACR:
+  `az aks update -n gic-cbs-aks -g gic-cbs-rg --attach-acr giccbsacrforta20250924`
+- If rollout hangs, diagnostics steps will print pod/node status and logs.
+- For pipeline errors, check workflow logs for details on each step.
+
+## Security
+OWASP ZAP is run automatically after deployment to scan for vulnerabilities. Results will be available in the workflow logs.
 
 ## Contribution
 Contributions are welcome! Please follow these steps to contribute:
