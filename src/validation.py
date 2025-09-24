@@ -39,10 +39,12 @@ def movie_validation(user_input):
     log_info(f"Validating movie input: '{user_input}'")
     if not isinstance(user_input, str):
         log_warning("Movie input is not a string.")
+        print("Input must be a string.")
         return False
     parts = user_input.strip().split()
     if len(parts) < 3:
         log_warning("Movie input does not have at least 3 parts.")
+        print("Input must have at least 3 parts: [Title] [Row] [SeatsPerRow].")
         return False
     # Title can be multiple words, so join all but last two as title
     title = " ".join(parts[:-2])
@@ -50,20 +52,25 @@ def movie_validation(user_input):
     seats_per_row = parts[-1]
     if not title.strip():
         log_warning("Movie title is empty.")
+        print("Movie title cannot be empty.")
         return False
     if not is_positive_integer(row):
         log_warning("Row is not a positive integer.")
+        print("Row must be a positive integer (1-26).")
         return False
     if not is_positive_integer(seats_per_row):
         log_warning("Seats per row is not a positive integer.")
+        print("Seats per row must be a positive integer (1-50).")
         return False
     row_int = int(row)
     seats_int = int(seats_per_row)
     if not (1 <= row_int <= 26):
         log_warning("Row is out of allowed range (1-26).")
+        print("Row must be between 1 and 26.")
         return False
     if not (1 <= seats_int <= 50):
         log_warning("Seats per row is out of allowed range (1-50).")
+        print("Seats per row must be between 1 and 50.")
         return False
     log_info("Movie input validated successfully.")
     return True
